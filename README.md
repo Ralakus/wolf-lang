@@ -1,5 +1,6 @@
 # Wolf Programming Language
 A simple, lightweight language made in C11
+
 [![license](http://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ## Build requirements
