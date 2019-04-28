@@ -28,6 +28,7 @@ workspace "wolf-lang"
     filter { "configurations:Debug" }
         symbols "On"
         optimize "Off"
+        buildoptions { "-Wall", "-Wextra" }
 
     filter { "configurations:Release" }
         symbols "Off"
@@ -45,7 +46,10 @@ project "wolf"
     includedirs "src"
 
     files {
-        "src/main.c"
+        "src/main.c",
+        "src/vm.c",
+        "src/util/logger.c",
+        "src/util/memory.c",
     }
 
     if is_64_bit then
