@@ -1,0 +1,15 @@
+
+Wolf :: struct {
+
+    construct new :: () {}
+
+    bark :: () {
+        System.println("Bark!")
+    }
+
+}
+
+wolf = Wolf.new()
+
+wolf.bark()
+

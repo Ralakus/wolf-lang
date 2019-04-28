@@ -2,10 +2,21 @@
 #include "util/arg_parser.h"
 #include "vm.h"
 
+#include <stdio.h> 
+#include <stdlib.h>
+#include <string.h>
+
 static void repl() {
     char line[1024];
     for(;;) {
         wolf_print("> ");
+
+        if(!fgets(line, sizeof(line), stdin)) {
+            wolf_print_raw("\n");
+            break;
+        }
+
+
     }
 }
 
@@ -19,7 +30,7 @@ int main(int argc, char* argv[]) {
     wolf_arg_parser_add_arg(&arg_parser, &arg_help);
 
 
-    if(!wolf_arg_parser_parse(&arg_parser, argc, argv)) {
+    if(!wolf_arg_parser_parse(&arg_parser, argc, (const char**)argv)) {
         wolf_errorln("Failed to parse arguments!");
         wolf_arg_free(&arg_help);
         wolf_arg_parser_free(&arg_parser);
@@ -44,7 +55,7 @@ int main(int argc, char* argv[]) {
     wolf_arg_free(&arg_help);
     wolf_arg_parser_free(&arg_parser);
 
-    wolf_bytecode_t bytecode;
+    /*wolf_bytecode_t bytecode;
     wolf_bytecode_init(&bytecode);
 
     isize_t constant = wolf_bytecode_write_constant(&bytecode, 14.0);
@@ -74,7 +85,7 @@ int main(int argc, char* argv[]) {
 
     wolf_vm_free(&vm);
 
-    wolf_bytecode_free(&bytecode);
+    wolf_bytecode_free(&bytecode);*/
 
     return 0;
 }
