@@ -50,6 +50,38 @@ project "wolf"
         "src/vm.c",
         "src/util/logger.c",
         "src/util/memory.c",
+        "src/util/arg_parser.c",
+    }
+
+    if is_64_bit then
+        defines { "WOLF_64_BIT" }
+    else 
+        defines { "WOLF_32_BIT" }
+    end
+
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+
+        if build_os == linux and coverage_test then 
+            buildoptions { "-fprofile-arcs", "-ftest-coverage" }
+            linkoptions  { "-fprofile-arcs", "-ftest-coverage" }
+        end
+
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+
+    filter {}
+
+project "lwolf"
+    kind "StaticLib"
+
+    includedirs "src"
+
+    files {
+        "src/vm.c",
+        "src/util/logger.c",
+        "src/util/memory.c",
+        "src/util/arg_parser.c",
     }
 
     if is_64_bit then
