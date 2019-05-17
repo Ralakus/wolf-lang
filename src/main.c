@@ -1,10 +1,47 @@
 #include "util/logger.h"
 #include "util/arg_parser.h"
 #include "vm.h"
+#include "lexer.h"
 
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
+
+static void intrepret(const char* source) {
+    wolf_vm_t vm;
+    wolf_vm_init(&vm);
+
+    wolf_lexer_t lexer;
+    wolf_lexer_init(&lexer, source);
+
+    isize_t line = -1;
+    for(;;) {
+        wolf_token_t token = wolf_lexer_scan(&lexer);
+
+        if(token.type == WOLF_TOK_ERR) {
+            wolf_errorln("Error, failed to lex string!");
+            break;
+        }
+
+        if(token.line != line) {
+            wolf_print_raw(WOLF_ANSI_RED"%4d "WOLF_ANSI_RESET, token.line);
+            line = token.line;
+        } else {
+            wolf_print_raw(WOLF_ANSI_RED"   | "WOLF_ANSI_RESET);
+        }
+        if(token.type == WOLF_TOK_EOF) {
+            wolf_println_raw(WOLF_ANSI_GREEN"%-14.14s "WOLF_ANSI_YELLOW"\'\\0\'"WOLF_ANSI_RESET, wolf_token_str_map[token.type]);
+            break;
+        }
+
+        wolf_println_raw(WOLF_ANSI_GREEN"%-14.14s"WOLF_ANSI_YELLOW" \'%.*s\'"WOLF_ANSI_RESET, wolf_token_str_map[token.type], token.len, token.data);
+
+
+    }
+
+    wolf_lexer_free(&lexer);
+    wolf_vm_free(&vm);
+}
 
 static void repl() {
     char line[1024];
@@ -16,6 +53,7 @@ static void repl() {
             break;
         }
 
+        intrepret(line);
 
     }
 }
