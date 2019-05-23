@@ -17,3 +17,4 @@ A simple, lightweight language made in C11
 
 ## What is Wolf?
 Wolf is a fast, simple programming language that aims to be user friendly and safe yet give control to the user
+Wolf is the predecessor to [LabyriLanguage](https://gitlab.com/Ralakus/LabyriLanguage)

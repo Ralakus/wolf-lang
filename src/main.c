@@ -2,25 +2,43 @@
 #include "util/arg_parser.h"
 #include "vm.h"
 #include "lexer.h"
+#include "parser.h"
 
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
 
-static void intrepret(const char* source) {
+static bool intrepret(const char* source) {
     wolf_vm_t vm;
     wolf_vm_init(&vm);
 
     wolf_lexer_t lexer;
     wolf_lexer_init(&lexer, source);
 
+    wolf_parser_t parser;
+    wolf_parser_init(&parser);
+
+    wolf_bytecode_t bytecode;
+    wolf_bytecode_init(&bytecode);
+
     isize_t line = -1;
+
+    bool exit = false;
     for(;;) {
         wolf_token_t token = wolf_lexer_scan(&lexer);
 
         if(token.type == WOLF_TOK_ERR) {
             wolf_errorln("Error, failed to lex string!");
             break;
+        }
+
+        if(line == -1 && token.type == WOLF_TOK_INDENTIFIER) {
+            if(token.len == 4) {
+                if(memcmp(token.data, "exit", 4)==0) {
+                    exit = true;
+                    break;
+                }
+            }
         }
 
         if(token.line != line) {
@@ -31,16 +49,27 @@ static void intrepret(const char* source) {
         }
         if(token.type == WOLF_TOK_EOF) {
             wolf_println_raw(WOLF_ANSI_GREEN"%-14.14s "WOLF_ANSI_YELLOW"\'\\0\'"WOLF_ANSI_RESET, wolf_token_str_map[token.type]);
+
+            wolf_parser_parse(&parser, &bytecode, source);
+            wolf_bytecode_disassemble(&bytecode, "Test");
+
+            wolf_noticeln(WOLF_ANSI_CYAN"--== Interpret ==--"WOLF_ANSI_RESET);
+            wolf_vm_set_debug_trace(&vm, true);
+            wolf_vm_run_bytecode(&vm, &bytecode);
+
             break;
         }
 
         wolf_println_raw(WOLF_ANSI_GREEN"%-14.14s"WOLF_ANSI_YELLOW" \'%.*s\'"WOLF_ANSI_RESET, wolf_token_str_map[token.type], token.len, token.data);
 
-
     }
 
+    wolf_bytecode_free(&bytecode);
+    wolf_parser_free(&parser);
     wolf_lexer_free(&lexer);
     wolf_vm_free(&vm);
+
+    return !exit;
 }
 
 static void repl() {
@@ -53,7 +82,9 @@ static void repl() {
             break;
         }
 
-        intrepret(line);
+        if(!intrepret(line)) {
+            break;
+        }
 
     }
 }
@@ -92,38 +123,6 @@ int main(int argc, char* argv[]) {
 
     wolf_arg_free(&arg_help);
     wolf_arg_parser_free(&arg_parser);
-
-    /*wolf_bytecode_t bytecode;
-    wolf_bytecode_init(&bytecode);
-
-    isize_t constant = wolf_bytecode_write_constant(&bytecode, 14.0);
-    wolf_bytecode_write(&bytecode, WOLF_OP_CONSTANT, 0);
-    wolf_bytecode_write(&bytecode, constant, 0);
-
-    wolf_bytecode_write(&bytecode, WOLF_OP_NEGATE, 0);
-
-    constant = wolf_bytecode_write_constant(&bytecode, 48.0);
-    wolf_bytecode_write(&bytecode, WOLF_OP_CONSTANT, 0);
-    wolf_bytecode_write(&bytecode, constant, 0);
-
-    wolf_bytecode_write(&bytecode, WOLF_OP_NEGATE, 0);
-
-    wolf_bytecode_write(&bytecode, WOLF_OP_MUL, 0);
-    
-    wolf_bytecode_write(&bytecode, WOLF_OP_RETURN, 0);
-
-    wolf_bytecode_disassemble(&bytecode, "Test");
-
-    wolf_vm_t vm;
-    wolf_vm_init(&vm);
-    wolf_vm_set_debug_trace(&vm, true);
-
-    wolf_noticeln(WOLF_ANSI_CYAN"--== Virtual Machine Trace ==--"WOLF_ANSI_RESET);
-    wolf_vm_run_bytecode(&vm, &bytecode);
-
-    wolf_vm_free(&vm);
-
-    wolf_bytecode_free(&bytecode);*/
 
     return 0;
 }

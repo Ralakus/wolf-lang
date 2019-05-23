@@ -49,6 +49,7 @@ project "wolf"
         "src/main.c",
         "src/vm.c",
         "src/lexer.c",
+        "src/parser.c",
         "src/util/logger.c",
         "src/util/memory.c",
         "src/util/arg_parser.c",
@@ -81,6 +82,7 @@ project "lwolf"
     files {
         "src/vm.c",
         "src/lexer.c",
+        "src/parser.c",
         "src/util/logger.c",
         "src/util/memory.c",
         "src/util/arg_parser.c",

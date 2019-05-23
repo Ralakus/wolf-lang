@@ -200,9 +200,9 @@ void wolf_bytecode_disassemble(wolf_bytecode_t* this, const char* name) {
 
     wolf_noticeln(WOLF_ANSI_CYAN"- Constants -"WOLF_ANSI_RESET);
     for(isize_t i = 0; i < this->constants.len; i++) {
-        wolf_print(WOLF_ANSI_RED"%04d      "WOLF_ANSI_YELLOW, i);
+        wolf_print_raw(WOLF_ANSI_RED"%04d     "WOLF_ANSI_YELLOW, i);
         wolf_value_print(this->constants.values[i]);
-        wolf_println(WOLF_ANSI_RESET);
+        wolf_println_raw(WOLF_ANSI_RESET);
     }
 
     wolf_noticeln(WOLF_ANSI_CYAN"- Instructions -"WOLF_ANSI_RESET);
@@ -256,14 +256,16 @@ wolf_interpret_result_t wolf_vm_run_bytecode(wolf_vm_t* this, wolf_bytecode_t* b
 
 static wolf_interpret_result_t run(wolf_vm_t* this) {
     #define READ_BYTE() (*this->ip++)
+    #define READ_SHORT() (this->ip += 2, (uint16_t)((this->ip[-2] << 8) | this->ip[-1])))
     #define READ_CONSTANT() (this->bytecode->constants.values[READ_BYTE()])
+    #define READ_CONSTANT_L() (this->bytecode->constants.values[READ_SHORT()])
 
     #define BINARY_OP(op)                 \
-        do {                              \
+        ({                                \
             double b = wolf_vm_pop(this); \
             double a = wolf_vm_pop(this); \
             wolf_vm_push(this, a op b);   \
-        } while(false)
+        })
 
     for(;;) {
 
