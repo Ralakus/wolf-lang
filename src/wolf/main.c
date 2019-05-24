@@ -117,9 +117,6 @@ int main(int argc, char* argv[]) {
 
             }
 
-            if(arg_debug.found) {
-                wolf_noticeln(WOLF_ANSI_CYAN"--== VM Stacktrace ==--"WOLF_ANSI_RESET);
-            }
             if(!wolf_run(&instance)) {
                 wolf_errorln("Failed to execute bytecode!");
 
@@ -202,9 +199,6 @@ int main(int argc, char* argv[]) {
 
             }
 
-            if(arg_debug.found) {
-                wolf_noticeln(WOLF_ANSI_CYAN"--== VM Stacktrace ==--"WOLF_ANSI_RESET);
-            }
             if(!wolf_run(&instance)) {
                 wolf_errorln("Failed to execute bytecode!");
 

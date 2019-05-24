@@ -70,6 +70,7 @@ bool wolf_load(wolf_t* this, const char* code) {
 
     bool result = wolf_parser_parse(&this->parser, &this->bytecode, this->source);
     if(!result) {
+        wolf_unload(this);
         return false;
     } else {
         if(this->debug_mode) {
@@ -91,6 +92,7 @@ bool wolf_load_file(wolf_t* this, const char* file_name) {
         this->file_loaded = true;
         return true;
     } else {
+        wolf_unload(this);
         return false;
     }
 }
@@ -136,6 +138,7 @@ bool wolf_unload(wolf_t* this) {
 
 bool wolf_run(wolf_t* this) {
     if(this->loaded) {
+        if(this->debug_mode) wolf_noticeln(WOLF_ANSI_CYAN"--== VM Stacktrace ==--"WOLF_ANSI_RESET);
         wolf_interpret_result_t result = wolf_vm_run_bytecode(&this->vm, &this->bytecode);
         if(result != WOLF_INTERPRET_OK) {
             return false;

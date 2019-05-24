@@ -47,6 +47,8 @@ bool wolf_repl(wolf_repl_params_t* params) {
                     wolf_noticeln("\'help\' prints this message");
                     wolf_noticeln("\'debug\' toggles debug mode");
                     wolf_noticeln("\'sys\' executes a command on the system");
+                    wolf_noticeln("\'loadf\' loads and executes source file");
+                    wolf_noticeln("\'loadb\' loads and executes bytecode file");
                     wolf_noticeln("\'exit\' exits repl");
                 }
                 else if(COMMAND("debug")) {
@@ -60,7 +62,40 @@ bool wolf_repl(wolf_repl_params_t* params) {
                     if(system(token.data)) {
                         wolf_errorln("Error running system command!");
                     }
-                } else {
+                }
+                else if(COMMAND("loadf")) {
+                    token = wolf_lexer_scan(&lexer);
+                    char* file_name = calloc(1, strlen(token.data));
+                    memcpy(file_name, token.data, strlen(token.data) - 1);
+                    if(!wolf_load_file(&instance, file_name)) {
+                        wolf_errorln("Failed to load file: \'%s\'!", file_name);
+                        free(file_name);
+                        continue;
+                    }
+                    if(!wolf_run(&instance)) {
+                        wolf_errorln("Failed to run: \'%s\'!", file_name);
+                        free(file_name);
+                        continue;
+                    }
+                    free(file_name);
+                }
+                else if(COMMAND("loadb")) {
+                    token = wolf_lexer_scan(&lexer);
+                    char* file_name = calloc(1, strlen(token.data));
+                    memcpy(file_name, token.data, strlen(token.data) - 1);
+                    if(!wolf_load_bytecode_file(&instance, file_name)) {
+                        wolf_errorln("Failed to load file: \'%s\'!", file_name);
+                        free(file_name);
+                        continue;
+                    }
+                    if(!wolf_run(&instance)) {
+                        wolf_errorln("Failed to run: \'%s\'!", file_name);
+                        free(file_name);
+                        continue;
+                    }
+                    free(file_name);
+                }
+                else {
                     wolf_errorln("Invalid command: \'%.*s\'!", token.len, token.data);
                 }
 
@@ -73,9 +108,6 @@ bool wolf_repl(wolf_repl_params_t* params) {
             wolf_errorln("Failed to compile code!");
             wolf_unload(&instance);
         } else {
-            if(params->debug_mode) {
-                wolf_noticeln(WOLF_ANSI_CYAN"--== VM Stacktrace ==--"WOLF_ANSI_RESET);
-            }
             if(!wolf_run(&instance)) {
                 wolf_errorln("Error running code!");
             }
