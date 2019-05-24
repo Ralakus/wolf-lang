@@ -89,6 +89,27 @@ isize_t wolf_bytecode_disassemble_instruction(wolf_bytecode_t* bytecode, isize_t
 /* disassembles bytecode and prints it out */
 void wolf_bytecode_disassemble(wolf_bytecode_t* bytecode, const char* name);
 
+/*
+    Serial Format
+    Note: wolf_vm_value_t has 4 bytes of padding in between 'type' and 'as'
+    HEADER - If any value is zero, it is interpreted as not existing
+    32 bit signed integer: Index of where constant data starts
+    32 bit signed integer: Length of constant data
+    32 bit signed integer: Index of where the bytecode starts
+    32 bit signed integer: Length of bytecode
+    32 bit signed integer: Index of where the line data starts
+    32 bit signed integer: Length of line data
+    DATA - Starts 192 bits ( 24 bytes ) from the begining
+    CONSTANTS
+    BYTECODE
+    LINE_DATA
+*/
+
+/* serializes bytecode and returns bytecode in serial format */
+uint8_t* wolf_bytecode_serialize(wolf_bytecode_t* bytecode, size_t* size, bool include_line_data);
+/* deserializes bytecode from serial format and returns bytecode */
+bool wolf_bytecode_deserialize(wolf_bytecode_t* bytecode, uint8_t* data);
+
 /* ================================
 
     Virtual Machine

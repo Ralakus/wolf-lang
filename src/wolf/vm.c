@@ -3,6 +3,8 @@
 #include "util/memory.h"
 #include "util/logger.h"
 
+#include <string.h>
+
 /* ================================
 
     Value type
@@ -20,7 +22,7 @@ void wolf_value_array_init(wolf_value_array_t* this) {
 }
 
 void wolf_value_array_free(wolf_value_array_t* this) {
-    WOLF_FREE_ARRAY(wolf_value_t, this->values, this->alloc_len);
+    this->values = WOLF_FREE_ARRAY(wolf_value_t, this->values, this->alloc_len);
     wolf_value_array_init(this);
 }
 
@@ -52,7 +54,7 @@ void wolf_line_array_init(wolf_line_array_t* this) {
 }
 
 void wolf_line_array_free(wolf_line_array_t* this) {
-    WOLF_FREE_ARRAY(isize_t, this->lines, this->alloc_len);
+    this-> lines = WOLF_FREE_ARRAY(isize_t, this->lines, this->alloc_len);
     wolf_line_array_init(this);
 }
 
@@ -109,7 +111,7 @@ void wolf_bytecode_init(wolf_bytecode_t* this) {
 }
 
 void wolf_bytecode_free(wolf_bytecode_t* this) {
-    WOLF_FREE_ARRAY(uint8_t, this->code, this->alloc_len);
+    this->code = WOLF_FREE_ARRAY(uint8_t, this->code, this->alloc_len);
     wolf_value_array_free(&this->constants);
     wolf_line_array_free(&this->lines);
     wolf_bytecode_init(this);
@@ -209,6 +211,137 @@ void wolf_bytecode_disassemble(wolf_bytecode_t* this, const char* name) {
     for(isize_t i = 0; i < this->len;) {
         i = wolf_bytecode_disassemble_instruction(this, i);
     }
+
+}
+
+/*
+    Serial Format
+    Note: wolf_vm_value_t has 4 bytes of padding in between 'type' and 'as'
+    HEADER - If any value is zero, it is interpreted as not existing
+    32 bit signed integer: Index of where constant data starts
+    32 bit signed integer: Length of constant data
+    32 bit signed integer: Index of where the bytecode starts
+    32 bit signed integer: Length of bytecode
+    32 bit signed integer: Index of where the line data starts
+    32 bit signed integer: Length of line data
+    DATA - Starts 192 bits ( 24 bytes ) from the begining
+    CONSTANTS
+    BYTECODE
+    LINE_DATA
+*/
+
+
+uint8_t* wolf_bytecode_serialize(wolf_bytecode_t* this, size_t* size, bool include_line_data) {
+
+    #define HEADER_OFFSET (sizeof(uint32_t) * 6)
+
+    uint32_t header[6] = {0, 0, 0, 0, 0, 0};
+
+    #define constants_start_index header[0]
+    #define constants_len header[1]
+    #define bytecode_start_index header[2]
+    #define bytecode_len header[3]
+    #define line_data_start_index header[4]
+    #define line_data_len header[5]
+
+    /* calculates each length */
+    constants_len = this->constants.len * sizeof(wolf_value_t);
+    bytecode_len  = this->len           * sizeof(uint8_t);
+    line_data_len = this->lines.len     * sizeof(isize_t);
+
+    /* calculates header */
+    constants_start_index = HEADER_OFFSET;
+    bytecode_start_index  = HEADER_OFFSET + constants_len;
+    line_data_start_index = HEADER_OFFSET + constants_len + bytecode_len;
+
+    if(!include_line_data) {
+        line_data_start_index = 0;
+        line_data_len = 0;
+    }
+
+    uint32_t total_len = HEADER_OFFSET + constants_len + bytecode_len + line_data_len;
+
+    uint8_t* serialized = NULL;
+    isize_t len         = 0;
+    serialized          = WOLF_GROW_ARRAY(uint8_t, serialized, 0, total_len);
+
+    memcpy(serialized, header, sizeof(header));
+    len += sizeof(header);
+    memcpy(serialized + len, this->constants.values, constants_len);
+    len += constants_len;
+    memcpy(serialized + len, this->code, bytecode_len);
+    len += bytecode_len;
+
+    if(include_line_data) {
+        memcpy(serialized + len, this->lines.lines, line_data_len);
+        len += line_data_len;
+    }
+
+    *size = len;
+
+    return serialized;
+
+
+    #undef constants_start_index
+    #undef constants_len 
+    #undef bytecode_start_index
+    #undef bytecode_len
+    #undef line_data_start_index
+    #undef line_data_len
+    #undef HEADER_OFFSET
+
+}
+
+bool wolf_bytecode_deserialize(wolf_bytecode_t* this, uint8_t* data) {
+
+    wolf_bytecode_free(this);
+
+    uint32_t* header = (uint32_t*)data;
+
+    #define constants_start_index header[0]
+    #define constants_len header[1]
+    #define bytecode_start_index header[2]
+    #define bytecode_len header[3]
+    #define line_data_start_index header[4]
+    #define line_data_len header[5]
+
+
+    this->constants.len       = constants_len / sizeof(wolf_value_t);
+    this->constants.alloc_len = this->constants.len;
+    this->constants.values    = WOLF_GROW_ARRAY(wolf_value_t,
+                                                this->constants.values,
+                                                0,
+                                                this->constants.len);
+    memcpy(this->constants.values, data + constants_start_index, this->constants.len);
+
+    this->len       = bytecode_len / sizeof(uint8_t);
+    this->alloc_len = this->len;
+    this->code      = WOLF_GROW_ARRAY(uint8_t,
+                                      this->code,
+                                      0,
+                                      this->len);
+    memcpy(this->code, data + bytecode_start_index, this->len);
+
+    if(line_data_len != 0 && line_data_start_index != 0) {
+
+        this->lines.len       = line_data_len / sizeof(isize_t);
+        this->lines.alloc_len = this->lines.len;
+        this->lines.lines     = WOLF_GROW_ARRAY(isize_t,
+                                                this->lines.lines,
+                                                0,
+                                                this->lines.len);
+        memcpy(this->lines.lines, data + line_data_start_index, this->lines.len);
+
+    }
+
+    return true;
+
+    #undef constants_start_index
+    #undef constants_len 
+    #undef bytecode_start_index
+    #undef bytecode_len
+    #undef line_data_start_index
+    #undef line_data_len
 
 }
 

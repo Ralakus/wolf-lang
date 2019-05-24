@@ -10,6 +10,8 @@ void wolf_parser_init(wolf_parser_t* this) {
     wolf_lexer_init(&this->lexer, NULL);
     this->was_error  = false;
     this->panic_mode = false;
+    this->debug_mode = false;
+    this->line       = -1;
     this->bytecode   = NULL;
 }
 
@@ -53,6 +55,28 @@ static inline void advance(wolf_parser_t* this) {
 
     for(;;) {
         this->current = wolf_lexer_scan(&this->lexer);
+
+        if(this->debug_mode) {
+            if(this->current.line != this->line) {
+                wolf_print_raw(WOLF_ANSI_RED"%4d "WOLF_ANSI_RESET, this->current.line);
+                this->line = this->current.line;
+            } else {
+                wolf_print_raw(WOLF_ANSI_RED"   | "WOLF_ANSI_RESET);
+            }
+            if(this->current.type == WOLF_TOK_EOF) {
+                wolf_println_raw(WOLF_ANSI_GREEN"%-14.14s "WOLF_ANSI_YELLOW"\'\\0\'"WOLF_ANSI_RESET, wolf_token_str_map[this->current.type]);
+                break;
+            }
+            wolf_println_raw(
+                WOLF_ANSI_GREEN"%-14.14s"
+                WOLF_ANSI_YELLOW" \'%.*s\'"
+                WOLF_ANSI_RESET, 
+                    wolf_token_str_map[this->current.type], 
+                    this->current.len, 
+                    this->current.data
+            );
+        }
+
         if(this->current.type != WOLF_TOK_ERR) break;
 
         error_at_current(this, this->current.data);
@@ -256,6 +280,10 @@ bool wolf_parser_parse(wolf_parser_t* this, wolf_bytecode_t* bytecode, const cha
     this->was_error  = false;
     this->panic_mode = false;
     this->bytecode   = bytecode;
+
+    if(this->debug_mode) {
+        wolf_noticeln(WOLF_ANSI_CYAN"--== Tokens ==--"WOLF_ANSI_RESET);
+    }
 
     advance(this);
     expression(this);

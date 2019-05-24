@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "logger.h": "c"
+        "logger.h": "c",
+        "string.h": "c",
+        "instance.h": "c",
+        "repl.h": "c"
     }
 }

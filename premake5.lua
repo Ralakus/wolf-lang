@@ -43,16 +43,18 @@ workspace "wolf-lang"
 project "wolf"
     kind "ConsoleApp"
 
-    includedirs "src"
+    includedirs "src/wolf"
 
     files {
-        "src/main.c",
-        "src/vm.c",
-        "src/lexer.c",
-        "src/parser.c",
-        "src/util/logger.c",
-        "src/util/memory.c",
-        "src/util/arg_parser.c",
+        "src/wolf/main.c",
+        "src/wolf/vm.c",
+        "src/wolf/lexer.c",
+        "src/wolf/parser.c",
+        "src/wolf/repl.c",
+        "src/wolf/instance.c",
+        "src/wolf/util/logger.c",
+        "src/wolf/util/memory.c",
+        "src/wolf/util/arg_parser.c",
     }
 
     if is_64_bit then
@@ -77,15 +79,17 @@ project "wolf"
 project "lwolf"
     kind "StaticLib"
 
-    includedirs "src"
+    includedirs "src/wolf"
 
     files {
-        "src/vm.c",
-        "src/lexer.c",
-        "src/parser.c",
-        "src/util/logger.c",
-        "src/util/memory.c",
-        "src/util/arg_parser.c",
+        "src/wolf/vm.c",
+        "src/wolf/lexer.c",
+        "src/wolf/parser.c",
+        "src/wolf/repl.c",
+        "src/wolf/instance.c",
+        "src/wolf/util/logger.c",
+        "src/wolf/util/memory.c",
+        "src/wolf/util/arg_parser.c",
     }
 
     if is_64_bit then

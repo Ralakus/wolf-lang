@@ -119,10 +119,6 @@ static inline wolf_token_t number(wolf_lexer_t* this) {
     return make_token(this, WOLF_TOK_NUMBER);
 }
 
-#define GROUP(c) \
-    } break;     \
-    case c: {
-    
 #define KEYWORD(str, tok, depth)                                     \
     if(this->current - this->start - depth == sizeof(str) - 1) {     \
         if(memcmp(this->start + depth, str, sizeof(str) - 1) == 0) { \
