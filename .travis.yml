@@ -10,4 +10,4 @@ install:
 
 script:
   - ./premake5 gmake2 && make -C build 
-  - ./build/bin/wolf ./test/wolf
+  - ./build/bin/wolf ./test/test.wolf
