@@ -50,14 +50,8 @@ void wolf_init(wolf_t* this) {
 }
 
 void wolf_free(wolf_t* this) {
-    this->loaded      = false;
-    if(this->file_loaded) {
-        free((char*)this->source);
-        this->file_loaded = false;
-    }
-    this->source      = NULL;
+    wolf_unload(this);
     wolf_parser_free(&this->parser);
-    wolf_bytecode_free(&this->bytecode);
     wolf_vm_free(&this->vm);
 }
 
@@ -86,7 +80,19 @@ bool wolf_load(wolf_t* this, const char* code) {
 }
 bool wolf_load_file(wolf_t* this, const char* file_name) {
     wolf_unload(this);
-    return false;
+
+    char* source = read_file(file_name, false);
+    if(source == NULL) {
+        return false;
+    }
+
+    bool result = wolf_load(this, source);
+    if(result) {
+        this->file_loaded = true;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool wolf_load_bytecode(wolf_t* this, wolf_bytecode_t bytecode) {
@@ -101,11 +107,28 @@ bool wolf_load_bytecode(wolf_t* this, wolf_bytecode_t bytecode) {
 }
 bool wolf_load_bytecode_file(wolf_t* this, const char* file_name) {
     wolf_unload(this);
-    return false;
+
+    uint8_t* data = read_file(file_name, true);
+    if(data == NULL) {
+        return false;
+    }
+
+    this->loaded      = true;
+    this->file_loaded = true;
+    wolf_bytecode_deserialize(&this->bytecode, data);
+    free(data);
+    if(this->debug_mode) {
+        wolf_bytecode_disassemble(&this->bytecode, "Input bytecode");
+    }
+    return true;
 }
 
 bool wolf_unload(wolf_t* this) {
     this->loaded = false;
+    if(this->file_loaded) {
+        free((char*)this->source);
+        this->file_loaded = false;
+    }
     this->source = NULL;
     wolf_bytecode_free(&this->bytecode);
     return true;

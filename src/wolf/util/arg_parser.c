@@ -96,7 +96,7 @@ static void add_extra_arg(wolf_arg_parser_t* this, const char* arg) {
 }
 
 bool wolf_arg_parser_parse  (wolf_arg_parser_t* this, int argc, const char** argv) {
-    wolf_arg_t* prev_arg;
+    wolf_arg_t* prev_arg = NULL;
 
     for(int i = 1; i < argc; i++) {
 

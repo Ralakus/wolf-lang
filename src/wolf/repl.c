@@ -37,7 +37,7 @@ bool wolf_repl(wolf_repl_params_t* params) {
             /* is command */
             if(token.type == WOLF_TOK_INDENTIFIER) {
 
-                #define COMMAND(str) (memcmp(token.data, str, min(token.len, sizeof(str))) == 0)
+                #define COMMAND(str) (memcmp(token.data, str, min((size_t)token.len, sizeof(str))) == 0)
 
                 if(COMMAND("exit")) {
                     break;

@@ -5,6 +5,7 @@
 #include "parser.h"
 
 #include "repl.h"
+#include "instance.h"
 
 #include <stdio.h> 
 #include <stdlib.h>
@@ -46,6 +47,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    if(argc == 1) {
+        wolf_errorln("Expected arguments!");
+        wolf_arg_parser_print_help(&arg_parser, "Wolf language 0.1.0");
+        return 1;
+    }
+
     if(arg_help.found) {
         wolf_arg_parser_print_help(&arg_parser, "Wolf language 0.1.0");
 
@@ -67,18 +74,155 @@ int main(int argc, char* argv[]) {
         };
         wolf_repl(&params);
     } else {
-        wolf_errorln("Nothing else implemented yet!");
 
-        wolf_arg_free(&arg_help);
-        wolf_arg_free(&arg_debug);
-        wolf_arg_free(&arg_compile);
-        wolf_arg_free(&arg_bytecode);
-        wolf_arg_free(&arg_output);
-        wolf_arg_free(&arg_repl);
+        wolf_t instance;
+        wolf_init(&instance);
 
-        wolf_arg_parser_free(&arg_parser);
+        wolf_set_debug_mode(&instance, arg_debug.found);
 
-        return 1;
+        const char* file_name = NULL;
+
+        if(arg_parser.ea_len > 0) {
+            file_name = arg_parser.extra_args[0];
+        } else {
+            wolf_errorln("Expected input file!");
+
+            wolf_arg_free(&arg_help);
+            wolf_arg_free(&arg_debug);
+            wolf_arg_free(&arg_compile);
+            wolf_arg_free(&arg_bytecode);
+            wolf_arg_free(&arg_output);
+            wolf_arg_free(&arg_repl);
+
+            wolf_arg_parser_free(&arg_parser);
+
+            return 1;
+        }
+
+        if(arg_bytecode.found) {
+
+            if(!wolf_load_bytecode_file(&instance, file_name)) {
+                wolf_errorln("Failed to load bytecode file!");
+
+                wolf_arg_free(&arg_help);
+                wolf_arg_free(&arg_debug);
+                wolf_arg_free(&arg_compile);
+                wolf_arg_free(&arg_bytecode);
+                wolf_arg_free(&arg_output);
+                wolf_arg_free(&arg_repl);
+
+                wolf_arg_parser_free(&arg_parser);
+
+                return 1;
+
+            }
+
+            if(arg_debug.found) {
+                wolf_noticeln(WOLF_ANSI_CYAN"--== VM Stacktrace ==--"WOLF_ANSI_RESET);
+            }
+            if(!wolf_run(&instance)) {
+                wolf_errorln("Failed to execute bytecode!");
+
+                wolf_arg_free(&arg_help);
+                wolf_arg_free(&arg_debug);
+                wolf_arg_free(&arg_compile);
+                wolf_arg_free(&arg_bytecode);
+                wolf_arg_free(&arg_output);
+                wolf_arg_free(&arg_repl);
+
+                wolf_arg_parser_free(&arg_parser);
+
+                return 1;
+            }
+
+
+
+        } else if(arg_compile.found) {
+
+            const char* output = NULL;
+            if(arg_output.found) {
+                output = arg_output.preceeding_args[0];
+            } else {
+                wolf_errorln("Expected output file!");
+
+                wolf_arg_free(&arg_help);
+                wolf_arg_free(&arg_debug);
+                wolf_arg_free(&arg_compile);
+                wolf_arg_free(&arg_bytecode);
+                wolf_arg_free(&arg_output);
+                wolf_arg_free(&arg_repl);
+
+                wolf_arg_parser_free(&arg_parser);
+
+                return 1;
+            }
+
+            if(!wolf_load_file(&instance, file_name)) {
+                wolf_errorln("Failed to load source file!");
+            }
+
+            size_t slen = 0;
+            uint8_t* serialized = wolf_bytecode_serialize(&instance.bytecode, &slen, arg_debug.found);
+
+            if(arg_debug.found) {
+                wolf_noticeln("Serlaized bytecode: ");
+                for(isize_t i = 0; (size_t)i < slen; i++) {
+                    wolf_print_raw("%02hhx ", serialized[i]);
+                }
+                wolf_print_raw("\n");
+            }
+
+            wolf_unload(&instance);
+
+            FILE* out = fopen(output, "wb+");
+            if(out == NULL){
+                wolf_errorln("Failed to open '%s'!", output);
+                return false;
+            }
+
+            fwrite(serialized, slen, 1, out);
+            fclose(out);
+
+            free(serialized);
+
+        } else {
+            if(!wolf_load_file(&instance, file_name)) {
+                wolf_errorln("Failed to load source file!");
+
+                wolf_arg_free(&arg_help);
+                wolf_arg_free(&arg_debug);
+                wolf_arg_free(&arg_compile);
+                wolf_arg_free(&arg_bytecode);
+                wolf_arg_free(&arg_output);
+                wolf_arg_free(&arg_repl);
+
+                wolf_arg_parser_free(&arg_parser);
+
+                return 1;
+
+            }
+
+            if(arg_debug.found) {
+                wolf_noticeln(WOLF_ANSI_CYAN"--== VM Stacktrace ==--"WOLF_ANSI_RESET);
+            }
+            if(!wolf_run(&instance)) {
+                wolf_errorln("Failed to execute bytecode!");
+
+                wolf_arg_free(&arg_help);
+                wolf_arg_free(&arg_debug);
+                wolf_arg_free(&arg_compile);
+                wolf_arg_free(&arg_bytecode);
+                wolf_arg_free(&arg_output);
+                wolf_arg_free(&arg_repl);
+
+                wolf_arg_parser_free(&arg_parser);
+
+                return 1;
+            }
+        }
+
+        wolf_free(&instance);
+
     }
 
     wolf_arg_free(&arg_help);

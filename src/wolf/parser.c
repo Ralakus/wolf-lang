@@ -110,6 +110,11 @@ static inline void end_parse(wolf_parser_t* this) {
 }
 
 static inline uint8_t make_constant(wolf_parser_t* this, wolf_value_t value) {
+    for(isize_t i = 0; i < current_bytecode(this)->constants.len; i++) {
+        if(current_bytecode(this)->constants.values[i] == value) {
+            return (uint8_t)i;
+        }
+    }
     int constant = wolf_bytecode_write_constant(current_bytecode(this), value);
     if (constant > UINT8_MAX) {
         error(this, "Too many constants in one chunk");
@@ -217,6 +222,10 @@ static inline void parse_precedence(wolf_parser_t* this, precedence_t precedence
     while (precedence <= get_rule(this->current.type)->precedence) {
         advance(this);
         parse_fn_t infix_rule = get_rule(this->previous.type)->infix;
+        if(infix_rule == NULL) {
+            error(this, "Expected infix operator!");
+            return;
+        }
         infix_rule(this);
     }
 }
