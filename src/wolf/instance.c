@@ -108,7 +108,7 @@ bool wolf_load_bytecode(wolf_t* this, wolf_bytecode_t bytecode) {
 bool wolf_load_bytecode_file(wolf_t* this, const char* file_name) {
     wolf_unload(this);
 
-    uint8_t* data = read_file(file_name, true);
+    uint8_t* data = (uint8_t*)read_file(file_name, true);
     if(data == NULL) {
         return false;
     }

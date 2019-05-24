@@ -2,6 +2,7 @@
 A simple, lightweight language made in C11
 
 [![license](http://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![build](https://travis-ci.org/Ralakus/wolf-lang.svg?branch=master)](https://travis-ci.org/Ralakus/wolf-lang)
 
 ## Build requirements
 * Premake 5
