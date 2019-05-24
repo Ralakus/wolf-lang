@@ -1,0 +1,13 @@
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+install:
+  - wget https://github.com/premake/premake-core/releases/download/v5.0.0-alpha14/premake-5.0.0-alpha14-linux.tar.gz -O premake5.tar.gz
+  - tar -xf premake5.tar.gz
+
+script:
+  - ./premake5 gmake2 && make -C build 
+  - ./bin/build/wolf ./test/wolf
