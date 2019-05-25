@@ -109,23 +109,29 @@ static inline void end_parse(wolf_parser_t* this) {
     emit_return(this);
 }
 
-static inline uint8_t make_constant(wolf_parser_t* this, wolf_value_t value) {
+static inline uint16_t make_constant(wolf_parser_t* this, wolf_value_t value) {
     for(isize_t i = 0; i < current_bytecode(this)->constants.len; i++) {
-        if(current_bytecode(this)->constants.values[i] == value) {
-            return (uint8_t)i;
+        if(wolf_value_is_equal(current_bytecode(this)->constants.values[i], value)) {
+            return (uint16_t)i;
         }
     }
     int constant = wolf_bytecode_write_constant(current_bytecode(this), value);
-    if (constant > UINT8_MAX) {
+    if (constant > UINT16_MAX) {
         error(this, "Too many constants in one chunk");
         return 0;
     }
 
-    return (uint8_t)constant;
+    return (uint16_t)constant;
 }
 
 static inline void emit_constant(wolf_parser_t* this, wolf_value_t value) {
-    emit_bytes(this, WOLF_OP_CONSTANT, make_constant(this, value));
+    uint16_t index = make_constant(this, value);
+    if(index <= UINT8_MAX) {
+        emit_bytes(this, WOLF_OP_CONSTANT, (uint8_t)index);
+    } else {
+        emit_byte(this, WOLF_OP_CONSTANT_L);
+        emit_bytes(this, ((uint8_t*)&index)[0], ((uint8_t*)&index)[1]);
+    }
 }
 
 
@@ -135,6 +141,7 @@ static inline void number     (wolf_parser_t* this);
 static inline void grouping   (wolf_parser_t* this);
 static inline void unary      (wolf_parser_t* this);
 static inline void binary     (wolf_parser_t* this);
+static inline void literal    (wolf_parser_t* this);
 
 typedef enum {
   PREC_NONE,
@@ -172,14 +179,14 @@ parse_rule_t rules[] = {
     { unary,    binary, PREC_TERM       }, // WOLF_TOK_MINUS
     { NULL,     binary, PREC_FACTOR     }, // WOLF_TOK_STAR
     { NULL,     binary, PREC_FACTOR     }, // WOLF_TOK_SLASH
-    { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_BANG
-    { NULL,     NULL,   PREC_EQUALITY   }, // WOLF_TOK_BANG_EQUAL
+    { unary,    NULL,   PREC_NONE       }, // WOLF_TOK_BANG
+    { NULL,     binary, PREC_EQUALITY   }, // WOLF_TOK_BANG_EQUAL
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_EQUAL
-    { NULL,     NULL,   PREC_EQUALITY   }, // WOLF_TOK_EQUAL_EQUAL
-    { NULL,     NULL,   PREC_COMPARISON }, // WOLF_TOK_GREATER
-    { NULL,     NULL,   PREC_COMPARISON }, // WOLF_TOK_GREATER_EQUAL
-    { NULL,     NULL,   PREC_COMPARISON }, // WOLF_TOK_LESS
-    { NULL,     NULL,   PREC_COMPARISON }, // WOLF_TOK_LESS_EQUAL
+    { NULL,     binary, PREC_EQUALITY   }, // WOLF_TOK_EQUAL_EQUAL
+    { NULL,     binary, PREC_COMPARISON }, // WOLF_TOK_GREATER
+    { NULL,     binary, PREC_COMPARISON }, // WOLF_TOK_GREATER_EQUAL
+    { NULL,     binary, PREC_COMPARISON }, // WOLF_TOK_LESS
+    { NULL,     binary, PREC_COMPARISON }, // WOLF_TOK_LESS_EQUAL
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_COLON
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_COLON_COLON
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_INDENTIFIER
@@ -196,8 +203,9 @@ parse_rule_t rules[] = {
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_KW_WHILE
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_KW_FOR
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_KW_BREAK
-    { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_KW_TRUE
-    { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_KW_FALSE
+    { literal,  NULL,   PREC_NONE       }, // WOLF_TOK_KW_TRUE
+    { literal,  NULL,   PREC_NONE       }, // WOLF_TOK_KW_FALSE
+    { literal,  NULL,   PREC_NONE       }, // WOLF_TOK_KW_NIL
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_ERR
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_EOF
 };
@@ -239,7 +247,7 @@ static inline void expression(wolf_parser_t* this) {
 
 static inline void number(wolf_parser_t* this) {
     double value = strtod(this->previous.data, NULL);
-    emit_constant(this, value);
+    emit_constant(this, WOLF_VALUE_NUMBER(value));
 }
 
 static inline void grouping(wolf_parser_t* this) {
@@ -253,7 +261,12 @@ static inline void unary(wolf_parser_t* this) {
     parse_precedence(this, PREC_UNARY);
 
     switch (op_type) {
-        case WOLF_TOK_MINUS: emit_byte(this, WOLF_OP_NEGATE); break;
+        case WOLF_TOK_BANG: 
+            emit_byte(this, WOLF_OP_NOT);
+            break;
+        case WOLF_TOK_MINUS:
+            emit_byte(this, WOLF_OP_NEGATE);
+            break;
         default:
             return;
     }
@@ -266,15 +279,57 @@ static void binary(wolf_parser_t* this) {
     parse_precedence(this, (precedence_t)(rule->precedence + 1));
 
     switch (op_type) {
-        case WOLF_TOK_PLUS:  emit_byte(this, WOLF_OP_ADD); break;
-        case WOLF_TOK_MINUS: emit_byte(this, WOLF_OP_SUB); break;
-        case WOLF_TOK_STAR:  emit_byte(this, WOLF_OP_MUL); break;
-        case WOLF_TOK_SLASH: emit_byte(this, WOLF_OP_DIV); break;
+        case WOLF_TOK_PLUS:
+            emit_byte(this, WOLF_OP_ADD);
+            break;
+        case WOLF_TOK_MINUS:
+            emit_byte(this, WOLF_OP_SUB);
+            break;
+        case WOLF_TOK_STAR:
+            emit_byte(this, WOLF_OP_MUL);
+            break;
+        case WOLF_TOK_SLASH:
+            emit_byte(this, WOLF_OP_DIV);
+            break;
+
+        case WOLF_TOK_BANG_EQUAL:
+            emit_bytes(this, WOLF_OP_EQUAL, WOLF_OP_NOT);
+            break;
+        case WOLF_TOK_EQUAL_EQUAL: 
+            emit_byte(this, WOLF_OP_EQUAL);
+            break;
+        case WOLF_TOK_GREATER:
+            emit_byte(this, WOLF_OP_GREATER);
+            break;
+        case WOLF_TOK_GREATER_EQUAL:
+            emit_bytes(this, WOLF_OP_LESS, WOLF_OP_NOT);
+            break;
+        case WOLF_TOK_LESS:
+            emit_byte(this, WOLF_OP_LESS);
+            break;
+        case WOLF_TOK_LESS_EQUAL:
+            emit_bytes(this, WOLF_OP_GREATER, WOLF_OP_NOT);
+            break;
         default:
             return;
     }
 }
 
+static inline void literal(wolf_parser_t* this) {
+    switch(this->previous.type) {
+        case WOLF_TOK_KW_TRUE:
+            emit_byte(this, WOLF_OP_TRUE);
+            break;
+        case WOLF_TOK_KW_FALSE: 
+            emit_byte(this, WOLF_OP_FALSE);
+            break;
+        case WOLF_TOK_KW_NIL:
+            emit_byte(this, WOLF_OP_NIL);
+            break;
+        default:
+            return;
+    }
+}
 
 
 

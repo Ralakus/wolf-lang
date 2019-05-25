@@ -161,6 +161,10 @@ static wolf_token_type_t match_identifier(wolf_lexer_t* this) {
             KEYWORD("f", WOLF_TOK_KW_IF, 1);
         } break;
 
+        case 'n': {
+            KEYWORD("il", WOLF_TOK_KW_NIL, 1);
+        } break;
+
         case 'o': {
             KEYWORD("r", WOLF_TOK_KW_OR, 1);
         } break;
@@ -307,6 +311,7 @@ const char* wolf_token_str_map[] = {
 
     "true",
     "false",
+    "nil",
 
     /*
         Special

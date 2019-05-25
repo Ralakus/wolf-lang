@@ -1,3 +1,14 @@
+// for future possbile optimization
+/*#include "util/arg_parser.c"
+#include "util/common.h"
+#include "util/logger.c"
+#include "util/memory.c"
+#include "instance.c"
+#include "lexer.c"
+#include "parser.c"
+#include "repl.c"
+#include "vm.c"*/
+
 #include "util/logger.h"
 #include "util/arg_parser.h"
 #include "vm.h"
@@ -6,6 +17,7 @@
 
 #include "repl.h"
 #include "instance.h"
+
 
 #include <stdio.h> 
 #include <stdlib.h>
@@ -140,18 +152,7 @@ int main(int argc, char* argv[]) {
             if(arg_output.found) {
                 output = arg_output.preceeding_args[0];
             } else {
-                wolf_errorln("Expected output file!");
-
-                wolf_arg_free(&arg_help);
-                wolf_arg_free(&arg_debug);
-                wolf_arg_free(&arg_compile);
-                wolf_arg_free(&arg_bytecode);
-                wolf_arg_free(&arg_output);
-                wolf_arg_free(&arg_repl);
-
-                wolf_arg_parser_free(&arg_parser);
-
-                return 1;
+                output = "out.cwlf";
             }
 
             if(!wolf_load_file(&instance, file_name)) {

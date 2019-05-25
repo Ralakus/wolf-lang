@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "premake5 gmake2 && make -C build/",
+            "command": "premake5 gmake2 && make -C build config=debug",
             "problemMatcher": [
                 "$gcc"
             ],

@@ -3,6 +3,7 @@
         "logger.h": "c",
         "string.h": "c",
         "instance.h": "c",
-        "repl.h": "c"
+        "repl.h": "c",
+        "stdarg.h": "c"
     }
 }

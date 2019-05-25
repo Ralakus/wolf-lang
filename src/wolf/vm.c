@@ -4,6 +4,8 @@
 #include "util/logger.h"
 
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 /* ================================
 
@@ -12,7 +14,40 @@
 ================================ */
 
 void wolf_value_print(wolf_value_t this) {
-    wolf_print_raw("%g", this);
+    switch (this.type) {
+        case WOLF_VALUE_TYPE_NIL: 
+            wolf_print_raw("nil");
+        break;
+
+        case WOLF_VALUE_TYPE_BOOL:
+            wolf_print_raw(this.as.boolean ? "true" : "false");
+        break;
+
+        case WOLF_VALUE_TYPE_NUMBER:
+            wolf_print_raw("%g", this.as.number);
+        break;
+    }
+}
+
+bool wolf_value_is_falsey(wolf_value_t this) {
+    return WOLF_VALUE_IS_NIL(this) || (WOLF_VALUE_IS_BOOL(this) && !this.as.boolean);
+}
+
+bool wolf_value_is_equal(wolf_value_t a, wolf_value_t b) {
+    if(a.type == b.type) {
+        switch(a.type) {
+            case WOLF_VALUE_TYPE_NIL:
+                return true;
+            case WOLF_VALUE_TYPE_BOOL: 
+                return a.as.boolean == b.as.boolean;
+            case WOLF_VALUE_TYPE_NUMBER:
+                return a.as.number == b.as.number;
+            default:
+                return false;
+        }
+    } else {
+        return false;
+    }
 }
 
 void wolf_value_array_init(wolf_value_array_t* this) {
@@ -150,6 +185,14 @@ static isize_t disassemble_consant_instruction(const char* name, wolf_bytecode_t
     return index + 2;
 }
 
+static isize_t disassemble_consant_instruction_long(const char* name, wolf_bytecode_t* this, isize_t index) {
+    uint16_t constant = *(uint16_t*)(&this->code[index + 1]);
+    wolf_print_raw(WOLF_ANSI_GREEN"%-14s "WOLF_ANSI_YELLOW"%4d \'", name, constant);
+    wolf_value_print(this->constants.values[constant]);
+    wolf_println_raw("\'"WOLF_ANSI_RESET);
+    return index + 3;
+}
+
 isize_t wolf_bytecode_disassemble_instruction(wolf_bytecode_t* this, isize_t index) {
     wolf_print_raw(WOLF_ANSI_RED"%04d", index);
 
@@ -163,6 +206,22 @@ isize_t wolf_bytecode_disassemble_instruction(wolf_bytecode_t* this, isize_t ind
 
         case WOLF_OP_CONSTANT: {
             return disassemble_consant_instruction("constant", this, index);
+        } break;
+
+        case WOLF_OP_CONSTANT_L: {
+            return disassemble_consant_instruction_long("constantl", this, index);
+        } break;
+
+        case WOLF_OP_TRUE: {
+            return disassemble_simple_instruction("load true", index);
+        } break;
+
+        case WOLF_OP_FALSE: {
+            return disassemble_simple_instruction("load false", index);
+        } break;
+
+        case WOLF_OP_NIL: {
+            return disassemble_simple_instruction("load nil", index);
         } break;
 
         case WOLF_OP_ADD: {
@@ -179,7 +238,23 @@ isize_t wolf_bytecode_disassemble_instruction(wolf_bytecode_t* this, isize_t ind
 
         case WOLF_OP_DIV: {
             return disassemble_simple_instruction("divide", index);
-        }
+        } break;
+
+        case WOLF_OP_NOT: {
+            return disassemble_simple_instruction("not", index);
+        } break;
+
+        case WOLF_OP_EQUAL: {
+            return disassemble_simple_instruction("equal", index);
+        } break;
+
+        case WOLF_OP_GREATER: {
+            return disassemble_simple_instruction("greater", index);
+        } break;
+
+        case WOLF_OP_LESS: {
+            return disassemble_simple_instruction("less", index);
+        } break;
 
         case WOLF_OP_NEGATE: {
             return disassemble_simple_instruction("negate", index);
@@ -380,6 +455,10 @@ wolf_value_t wolf_vm_pop(wolf_vm_t* this) {
     return *this->stack_top;
 }
 
+wolf_value_t wolf_vm_peek(wolf_vm_t* this, isize_t distance) {
+    return this->stack_top[-1 - distance];
+}
+
 wolf_interpret_result_t wolf_vm_run_bytecode(wolf_vm_t* this, wolf_bytecode_t* bytecode) {
     this->bytecode = bytecode;
     this->ip = bytecode->code;
@@ -387,17 +466,36 @@ wolf_interpret_result_t wolf_vm_run_bytecode(wolf_vm_t* this, wolf_bytecode_t* b
     return run(this);
 }
 
+static inline void runtime_error(wolf_vm_t* this, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    wolf_errorln("");
+    vfprintf(wolf_error_stream(), fmt, args);
+    va_end(args);
+    wolf_error_raw("\n");
+
+    size_t instr = this->ip - this->bytecode->code;
+    wolf_errorln("[line: %d] in script", wolf_line_array_get(&this->bytecode->lines, instr));
+
+    wolf_vm_reset_stack(this);
+}
+
 static wolf_interpret_result_t run(wolf_vm_t* this) {
     #define READ_BYTE() (*this->ip++)
-    #define READ_SHORT() (this->ip += 2, (uint16_t)((this->ip[-2] << 8) | this->ip[-1])))
+    #define READ_SHORT() (this->ip += 2, (uint16_t)((this->ip[-2] << 8) | this->ip[-1]))
     #define READ_CONSTANT() (this->bytecode->constants.values[READ_BYTE()])
     #define READ_CONSTANT_L() (this->bytecode->constants.values[READ_SHORT()])
 
-    #define BINARY_OP(op)                 \
-        ({                                \
-            double b = wolf_vm_pop(this); \
-            double a = wolf_vm_pop(this); \
-            wolf_vm_push(this, a op b);   \
+    #define BINARY_OP(type, op)                                  \
+        ({                                                       \
+            if(!WOLF_VALUE_IS_NUMBER(wolf_vm_peek(this, 0))      \
+             ||!WOLF_VALUE_IS_NUMBER(wolf_vm_peek(this, 1))) {   \
+                runtime_error(this, "Operands must be numbers"); \
+                return WOLF_INTERPRET_RUNTIME_ERROR;             \
+            }                                                    \
+            double b = wolf_vm_pop(this).as.number;              \
+            double a = wolf_vm_pop(this).as.number;              \
+            wolf_vm_push(this, type(a op b));                    \
         })
 
     for(;;) {
@@ -421,13 +519,62 @@ static wolf_interpret_result_t run(wolf_vm_t* this) {
                 wolf_vm_push(this, READ_CONSTANT());
             } break;
 
-            case WOLF_OP_ADD: BINARY_OP(+); break;
-            case WOLF_OP_SUB: BINARY_OP(-); break;
-            case WOLF_OP_MUL: BINARY_OP(*); break;
-            case WOLF_OP_DIV: BINARY_OP(/); break;
+            case WOLF_OP_CONSTANT_L: {
+                wolf_vm_push(this, READ_CONSTANT_L());
+            } break;
+
+            case WOLF_OP_TRUE: {
+                wolf_vm_push(this, WOLF_VALUE_BOOL(true));
+            } break;
+
+            case WOLF_OP_FALSE: {
+                wolf_vm_push(this, WOLF_VALUE_BOOL(false));
+            } break;
+
+            case WOLF_OP_NIL: {
+                wolf_vm_push(this, WOLF_VALUE_NIL);
+            } break;
+
+            case WOLF_OP_ADD: {
+                BINARY_OP(WOLF_VALUE_NUMBER,+);
+            }break;
+
+            case WOLF_OP_SUB: {
+                BINARY_OP(WOLF_VALUE_NUMBER,-);
+            }break;
+
+            case WOLF_OP_MUL: {
+                BINARY_OP(WOLF_VALUE_NUMBER,*);
+            }break;
+
+            case WOLF_OP_DIV: {
+                BINARY_OP(WOLF_VALUE_NUMBER,/);
+            }break;
+
+            case WOLF_OP_NOT: {
+                wolf_vm_push(this, WOLF_VALUE_BOOL(wolf_value_is_falsey(wolf_vm_pop(this))));
+            } break;
+
+            case WOLF_OP_EQUAL: {
+                wolf_value_t b = wolf_vm_pop(this);
+                wolf_value_t a = wolf_vm_pop(this);
+                wolf_vm_push(this, WOLF_VALUE_BOOL(wolf_value_is_equal(a, b)));
+            } break;
+
+            case WOLF_OP_GREATER: {
+                BINARY_OP(WOLF_VALUE_BOOL, >);
+            } break;
+
+            case WOLF_OP_LESS: {
+                BINARY_OP(WOLF_VALUE_BOOL, <);
+            } break;
 
             case WOLF_OP_NEGATE: {
-                wolf_vm_push(this, -wolf_vm_pop(this));
+                if(!WOLF_VALUE_IS_NUMBER(wolf_vm_peek(this, 0))) {
+                    runtime_error(this, "Operand must be a number");
+                    return WOLF_INTERPRET_RUNTIME_ERROR;
+                }
+                wolf_vm_push(this, WOLF_VALUE_NUMBER(-wolf_vm_pop(this).as.number));
             } break;
 
             case WOLF_OP_RETURN: {

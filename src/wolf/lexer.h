@@ -64,6 +64,7 @@ typedef enum {
 
     WOLF_TOK_KW_TRUE,
     WOLF_TOK_KW_FALSE,
+    WOLF_TOK_KW_NIL,
 
     /*
         Special

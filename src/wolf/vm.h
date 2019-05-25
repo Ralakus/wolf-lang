@@ -8,9 +8,34 @@
 
 ================================ */ 
 
-typedef double wolf_value_t;
+typedef enum {
+    WOLF_VALUE_TYPE_NIL,
+    WOLF_VALUE_TYPE_BOOL,
+    WOLF_VALUE_TYPE_NUMBER,
+} wolf_value_type_t;
 
+typedef struct {
+    wolf_value_type_t type;
+    union {
+        bool boolean;
+        double number;
+    } as;
+} wolf_value_t;
+
+#define WOLF_VALUE_NIL           ((wolf_value_t){ WOLF_VALUE_TYPE_NIL,    { .number  = 0     } })
+#define WOLF_VALUE_BOOL(value)   ((wolf_value_t){ WOLF_VALUE_TYPE_BOOL,   { .boolean = value } })
+#define WOLF_VALUE_NUMBER(value) ((wolf_value_t){ WOLF_VALUE_TYPE_NUMBER, { .number  = value } })
+
+#define WOLF_VALUE_IS_NIL(value)    ((value).type == WOLF_VALUE_TYPE_NIL)
+#define WOLF_VALUE_IS_BOOL(value)   ((value).type == WOLF_VALUE_TYPE_BOOL)
+#define WOLF_VALUE_IS_NUMBER(value) ((value).type == WOLF_VALUE_TYPE_NUMBER)
+
+/* prints value to print stream */
 void wolf_value_print(wolf_value_t value);
+/* if value would be a boolean false */
+bool wolf_value_is_falsey(wolf_value_t value);
+/* compares if two values are equal */
+bool wolf_value_is_equal(wolf_value_t a, wolf_value_t b);
 
 typedef struct {
     isize_t       alloc_len;
@@ -57,11 +82,26 @@ isize_t wolf_line_array_get(wolf_line_array_t* array, isize_t index);
 
 typedef enum {
     WOLF_OP_CONSTANT,
+    WOLF_OP_CONSTANT_L,
+
+    WOLF_OP_TRUE,
+    WOLF_OP_FALSE,
+    WOLF_OP_NIL,
+
+
     WOLF_OP_ADD,
     WOLF_OP_SUB,
     WOLF_OP_MUL,
     WOLF_OP_DIV,
+
+    WOLF_OP_NOT,
+    
+    WOLF_OP_EQUAL,
+    WOLF_OP_GREATER,
+    WOLF_OP_LESS,
+
     WOLF_OP_NEGATE,
+
     WOLF_OP_RETURN,
 } wolf_opcode_t;
 
@@ -148,6 +188,8 @@ void wolf_vm_reset_stack(wolf_vm_t* vm);
 void wolf_vm_push(wolf_vm_t* vm, wolf_value_t value);
 /* pops value from vm stack */
 wolf_value_t wolf_vm_pop(wolf_vm_t* vm);
+/* gets value from the stack without modifying the stack */
+wolf_value_t wolf_vm_peek(wolf_vm_t* vm, isize_t distance);
 
 /* runs bytecode on vm */
 wolf_interpret_result_t wolf_vm_run_bytecode(wolf_vm_t* vm, wolf_bytecode_t* bytecode);

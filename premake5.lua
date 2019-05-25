@@ -33,7 +33,8 @@ workspace "wolf-lang"
     filter { "configurations:Release" }
         symbols "Off"
         optimize "Speed"
-        linkoptions  { "-flto" }
+        buildoptions { "-Ofast" }
+        linkoptions  { "-flto", "-static" }
         
     filter { }
 
