@@ -88,14 +88,13 @@ typedef enum {
     WOLF_OP_FALSE,
     WOLF_OP_NIL,
 
-
     WOLF_OP_ADD,
     WOLF_OP_SUB,
     WOLF_OP_MUL,
     WOLF_OP_DIV,
 
     WOLF_OP_NOT,
-    
+
     WOLF_OP_EQUAL,
     WOLF_OP_GREATER,
     WOLF_OP_LESS,
