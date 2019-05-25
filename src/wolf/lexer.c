@@ -1,5 +1,8 @@
 #include "lexer.h"
 
+#include "util/logger.h"
+
+#include <stdlib.h>
 #include <string.h>
 
 void wolf_lexer_init(wolf_lexer_t* this, const char* source) {
@@ -128,9 +131,6 @@ static inline wolf_token_t number(wolf_lexer_t* this) {
 
 static wolf_token_type_t match_identifier(wolf_lexer_t* this) {
     switch (this->start[0]) {
-        default: {
-        } break;
-
         case 'a': {
             KEYWORD("nd", WOLF_TOK_KW_AND, 1);
         } break;
@@ -194,6 +194,9 @@ static wolf_token_type_t match_identifier(wolf_lexer_t* this) {
         case 'w': {
             KEYWORD("hile", WOLF_TOK_KW_WHILE, 1);
         } break;
+
+        default:
+            break;
     }
     return WOLF_TOK_INDENTIFIER;
 }

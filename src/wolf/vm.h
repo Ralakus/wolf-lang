@@ -9,9 +9,24 @@
 ================================ */ 
 
 typedef enum {
+    WOLF_OBJECT_TYPE_STRING,
+} wolf_object_type_t;
+
+typedef struct {
+    wolf_object_type_t type;
+} wolf_object_t;
+
+typedef struct {
+    wolf_object_t object;
+    isize_t len;
+    char* str;
+} wolf_object_string_t;
+
+typedef enum {
     WOLF_VALUE_TYPE_NIL,
     WOLF_VALUE_TYPE_BOOL,
     WOLF_VALUE_TYPE_NUMBER,
+    WOLF_VALUE_TYPE_OBJECT,
 } wolf_value_type_t;
 
 typedef struct {
@@ -19,8 +34,10 @@ typedef struct {
     union {
         bool boolean;
         double number;
+        wolf_object_t* object;
     } as;
 } wolf_value_t;
+
 
 #define WOLF_VALUE_NIL           ((wolf_value_t){ WOLF_VALUE_TYPE_NIL,    { .number  = 0     } })
 #define WOLF_VALUE_BOOL(value)   ((wolf_value_t){ WOLF_VALUE_TYPE_BOOL,   { .boolean = value } })
@@ -29,6 +46,11 @@ typedef struct {
 #define WOLF_VALUE_IS_NIL(value)    ((value).type == WOLF_VALUE_TYPE_NIL)
 #define WOLF_VALUE_IS_BOOL(value)   ((value).type == WOLF_VALUE_TYPE_BOOL)
 #define WOLF_VALUE_IS_NUMBER(value) ((value).type == WOLF_VALUE_TYPE_NUMBER)
+#define WOLF_VALUE_IS_OBJECT(value) ((value).type == WOLF_VALUE_TYPE_OBJECT)
+
+#define WOLF_VALUE_OBJECT_TYPE(value) ((value).as.object->type)
+
+bool wolf_object_is_type(wolf_value_t* value, wolf_object_type_t type);
 
 /* prints value to print stream */
 void wolf_value_print(wolf_value_t value);

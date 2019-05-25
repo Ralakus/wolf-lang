@@ -113,13 +113,13 @@ void wolf_line_array_write(wolf_line_array_t* this, isize_t line) {
         } else {
             this->len += 2;
             this->lines[this->len - 2] = line;
-            this->lines[this->len - 1]     = 1;
+            this->lines[this->len - 1] = 1;
         }
     }
     ++this->run_len;
 }
 
-isize_t wolf_line_array_get  (wolf_line_array_t* this, isize_t index) {
+isize_t wolf_line_array_get(wolf_line_array_t* this, isize_t index) {
     
     isize_t counter = 0;
     for(isize_t i = 0; i < this->len; i += 2) {
@@ -585,12 +585,15 @@ static wolf_interpret_result_t run(wolf_vm_t* this) {
             } break;
 
             default: {
+                runtime_error(this, "Unknown instruction: %d", instruction);
                 return WOLF_INTERPRET_RUNTIME_ERROR;
             } break;
         }
     }
 
     #undef BINARY_OP
+    #undef READ_CONSTANT_L
     #undef READ_CONSTANT
+    #undef READ_SHORT
     #undef READ_BYTE
 }

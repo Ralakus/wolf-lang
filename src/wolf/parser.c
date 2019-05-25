@@ -268,7 +268,7 @@ static inline void unary(wolf_parser_t* this) {
             emit_byte(this, WOLF_OP_NEGATE);
             break;
         default:
-            return;
+            UNREACHABLE();
     }
 }
 
@@ -311,7 +311,7 @@ static void binary(wolf_parser_t* this) {
             emit_bytes(this, WOLF_OP_GREATER, WOLF_OP_NOT);
             break;
         default:
-            return;
+            UNREACHABLE();
     }
 }
 
@@ -327,7 +327,7 @@ static inline void literal(wolf_parser_t* this) {
             emit_byte(this, WOLF_OP_NIL);
             break;
         default:
-            return;
+            UNREACHABLE();
     }
 }
 

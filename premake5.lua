@@ -31,7 +31,7 @@ workspace "wolf-lang"
         buildoptions { "-Wall", "-Wextra" }
 
     filter { "configurations:Release" }
-        symbols "Off"
+        symbols "On"
         optimize "Speed"
         buildoptions { "-Ofast" }
         linkoptions  { "-flto", "-static" }
