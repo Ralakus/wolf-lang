@@ -2,6 +2,7 @@
 
 #include "lexer.h"
 #include "vm.h"
+#include "object.h"
 
 typedef struct {
     wolf_lexer_t     lexer;

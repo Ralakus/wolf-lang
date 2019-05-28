@@ -4,6 +4,7 @@
         "string.h": "c",
         "instance.h": "c",
         "repl.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "common.h": "c"
     }
 }

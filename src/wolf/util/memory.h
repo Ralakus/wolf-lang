@@ -27,4 +27,8 @@ void* wolf_realloc(void* ptr, size_t old_size, size_t new_size);
                          (old_len) * sizeof(type), \
                          0))
 
+#define WOLF_ALLOCATE(type, count) \
+    ((type*)wolf_realloc(NULL, 0, sizeof(type) * (count)))
 
+#define WOLF_FREE(type, ptr) \
+    ((type*)wolf_realloc(ptr, sizeof(type), 0))

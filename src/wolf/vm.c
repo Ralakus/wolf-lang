@@ -1,4 +1,5 @@
 #include "vm.h"
+#include "object.h"
 
 #include "util/memory.h"
 #include "util/logger.h"
@@ -17,15 +18,19 @@ void wolf_value_print(wolf_value_t this) {
     switch (this.type) {
         case WOLF_VALUE_TYPE_NIL: 
             wolf_print_raw("nil");
-        break;
+            break;
 
         case WOLF_VALUE_TYPE_BOOL:
             wolf_print_raw(this.as.boolean ? "true" : "false");
-        break;
+            break;
 
         case WOLF_VALUE_TYPE_NUMBER:
             wolf_print_raw("%g", this.as.number);
-        break;
+            break;
+
+        case WOLF_VALUE_TYPE_OBJECT:
+            wolf_object_print(this);
+            break;
     }
 }
 
@@ -42,6 +47,13 @@ bool wolf_value_is_equal(wolf_value_t a, wolf_value_t b) {
                 return a.as.boolean == b.as.boolean;
             case WOLF_VALUE_TYPE_NUMBER:
                 return a.as.number == b.as.number;
+            case WOLF_VALUE_TYPE_OBJECT: {
+                wolf_object_string_t* a_str = WOLF_OBJECT_AS_STRING(a);
+                wolf_object_string_t* b_str = WOLF_OBJECT_AS_STRING(b);
+                return a_str->len == b_str->len &&
+                    memcmp(a_str->str, b_str->str, a_str->len);
+            } break;
+                
             default:
                 return false;
         }
@@ -429,8 +441,9 @@ bool wolf_bytecode_deserialize(wolf_bytecode_t* this, uint8_t* data) {
 static wolf_interpret_result_t run(wolf_vm_t* this);
 
 void wolf_vm_init(wolf_vm_t* this) {
-    this->bytecode = NULL;
+    this->bytecode  = NULL;
     this->stack_top = this->stack;
+    this->objects   = NULL;
 }
 
 void wolf_vm_free(wolf_vm_t* this) {
@@ -464,6 +477,20 @@ wolf_interpret_result_t wolf_vm_run_bytecode(wolf_vm_t* this, wolf_bytecode_t* b
     this->ip = bytecode->code;
 
     return run(this);
+}
+
+static inline void concat(wolf_vm_t* this) {
+    wolf_object_string_t* b = WOLF_OBJECT_AS_STRING(wolf_vm_pop(this));
+    wolf_object_string_t* a = WOLF_OBJECT_AS_STRING(wolf_vm_pop(this));
+
+    isize_t len = a->len + b->len;
+    char* chars = WOLF_ALLOCATE(char, len + 1);
+    memcpy(chars, a->str, a->len);
+    memcpy(chars + a->len, b->str, b->len);
+    chars[len] = '\0';
+
+    wolf_object_string_t* result = wolf_object_string_take(chars, len);
+    wolf_vm_push(this, WOLF_VALUE_OBJECT((wolf_object_t*)result));
 }
 
 static inline void runtime_error(wolf_vm_t* this, const char* fmt, ...) {
@@ -536,20 +563,32 @@ static wolf_interpret_result_t run(wolf_vm_t* this) {
             } break;
 
             case WOLF_OP_ADD: {
-                BINARY_OP(WOLF_VALUE_NUMBER,+);
-            }break;
+                if(WOLF_OBJECT_IS_STRING(wolf_vm_peek(this, 0))
+                && WOLF_OBJECT_IS_STRING(wolf_vm_peek(this, 1))) {
+                    concat(this);
+                }
+                else if(WOLF_VALUE_IS_NUMBER(wolf_vm_peek(this, 0)) 
+                && WOLF_VALUE_IS_NUMBER(wolf_vm_peek(this, 1))) {
+                    double b = wolf_vm_pop(this).as.number;
+                    double a = wolf_vm_pop(this).as.number;
+                    wolf_vm_push(this, WOLF_VALUE_NUMBER(a + b));
+                } else {
+                    runtime_error(this, "Operands must be numbers or strings");
+                    return WOLF_INTERPRET_RUNTIME_ERROR;
+                }
+            } break;
 
             case WOLF_OP_SUB: {
                 BINARY_OP(WOLF_VALUE_NUMBER,-);
-            }break;
+            } break;
 
             case WOLF_OP_MUL: {
                 BINARY_OP(WOLF_VALUE_NUMBER,*);
-            }break;
+            } break;
 
             case WOLF_OP_DIV: {
                 BINARY_OP(WOLF_VALUE_NUMBER,/);
-            }break;
+            } break;
 
             case WOLF_OP_NOT: {
                 wolf_vm_push(this, WOLF_VALUE_BOOL(wolf_value_is_falsey(wolf_vm_pop(this))));

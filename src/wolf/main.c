@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/string.h"
+
 int main(int argc, char* argv[]) {
 
     wolf_arg_parser_t arg_parser;
@@ -230,4 +232,5 @@ int main(int argc, char* argv[]) {
     wolf_arg_parser_free(&arg_parser);
 
     return 0;
+
 }

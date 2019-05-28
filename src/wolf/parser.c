@@ -142,6 +142,7 @@ static inline void grouping   (wolf_parser_t* this);
 static inline void unary      (wolf_parser_t* this);
 static inline void binary     (wolf_parser_t* this);
 static inline void literal    (wolf_parser_t* this);
+static inline void string     (wolf_parser_t* this);
 
 typedef enum {
   PREC_NONE,
@@ -190,7 +191,7 @@ parse_rule_t rules[] = {
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_COLON
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_COLON_COLON
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_INDENTIFIER
-    { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_STRING
+    { string,   NULL,   PREC_NONE       }, // WOLF_TOK_STRING
     { NULL,     NULL,   PREC_NONE       }, // WOLF_TOK_INTERPOLATION
     { number,   NULL,   PREC_NONE       }, // WOLF_TOK_NUMBER
     { NULL,     NULL,   PREC_AND        }, // WOLF_TOK_KW_AND
@@ -331,7 +332,10 @@ static inline void literal(wolf_parser_t* this) {
     }
 }
 
-
+static inline void string(wolf_parser_t* this) {
+    emit_constant(this, WOLF_VALUE_OBJECT(
+        (wolf_object_t*)wolf_object_string_copy(this->previous.data + 1, this->previous.len - 2)));
+}
 
 
 
