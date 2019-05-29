@@ -51,7 +51,7 @@ bool wolf_value_is_equal(wolf_value_t a, wolf_value_t b) {
                 wolf_object_string_t* a_str = WOLF_OBJECT_AS_STRING(a);
                 wolf_object_string_t* b_str = WOLF_OBJECT_AS_STRING(b);
                 return a_str->len == b_str->len &&
-                    memcmp(a_str->str, b_str->str, a_str->len);
+                    memcmp(a_str->str, b_str->str, a_str->len) == 0;
             } break;
                 
             default:
