@@ -1,3 +1,5 @@
+<img src="./logo/best_logo_ever_alpha.png" width=25%>
+
 # Wolf Programming Language
 A simple, lightweight language made in C11
 
@@ -7,7 +9,6 @@ A simple, lightweight language made in C11
 ![repo size](https://img.shields.io/github/repo-size/Ralakus/wolf-lang.svg?style=flat-square)
 ![code size](https://img.shields.io/github/languages/code-size/Ralakus/wolf-lang.svg?style=flat-square)
 
-<img src="./logo/best_logo_ever_alpha.png" width=12.5%>
 
 ## Build requirements
 * Premake 5
