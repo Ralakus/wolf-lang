@@ -4,8 +4,10 @@ A simple, lightweight language made in C11
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
 [![build](https://img.shields.io/travis/Ralakus/wolf-lang.svg?style=flat-square)](https://travis-ci.org/Ralakus/wolf-lang)
 [![issues](https://img.shields.io/github/issues/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang/issues)
-[![repo size](https://img.shields.io/github/repo-size/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang)
-[![code size](https://img.shields.io/github/languages/code-size/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang)
+![repo size](https://img.shields.io/github/repo-size/Ralakus/wolf-lang.svg?style=flat-square)
+![code size](https://img.shields.io/github/languages/code-size/Ralakus/wolf-lang.svg?style=flat-square)
+
+<img src="./logo/best_logo_ever_alpha.png" width=12.5%>
 
 ## Build requirements
 * Premake 5
