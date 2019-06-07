@@ -1,8 +1,9 @@
 # Wolf Programming Language
 A simple, lightweight language made in C11
 
-[![license](http://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![build](https://travis-ci.org/Ralakus/wolf-lang.svg?branch=master)](https://travis-ci.org/Ralakus/wolf-lang)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
+[![build](https://img.shields.io/travis/Ralakus/wolf-lang.svg?style=flat-square)](https://travis-ci.org/Ralakus/wolf-lang)
+[![issues](https://img.shields.io/github/issues/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang/issues)
 
 ## Build requirements
 * Premake 5

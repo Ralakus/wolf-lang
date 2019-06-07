@@ -18,7 +18,7 @@ workspace "wolf-lang"
     location "build"
 
     if is_64_bit then
-        architecture "x86_64"
+        architecture "x64"
     else
         architecture "x86"
     end

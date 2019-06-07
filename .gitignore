@@ -1,5 +1,4 @@
-build/bin
-build/obj
+build/
 .vscode/ipch
 out.cwlf
 test/big.wolf
