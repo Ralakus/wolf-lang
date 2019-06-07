@@ -4,6 +4,8 @@ A simple, lightweight language made in C11
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
 [![build](https://img.shields.io/travis/Ralakus/wolf-lang.svg?style=flat-square)](https://travis-ci.org/Ralakus/wolf-lang)
 [![issues](https://img.shields.io/github/issues/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang/issues)
+[![repo size](https://img.shields.io/github/repo-size/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang)
+[![code size](https://img.shields.io/github/languages/code-size/Ralakus/wolf-lang.svg?style=flat-square)](https://github.com/Ralakus/wolf-lang)
 
 ## Build requirements
 * Premake 5
@@ -16,6 +18,7 @@ A simple, lightweight language made in C11
 ## How to build ( Windows )
 0. Run `premake5 vs2017` or whatever Visual Studio version you have
 1. Open generated solution file
+2. Build solution
 
 ## What is Wolf?
 Wolf is a fast, simple programming language that aims to be user friendly and safe yet give control to the user  
