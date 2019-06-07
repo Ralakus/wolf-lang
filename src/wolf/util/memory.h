@@ -2,6 +2,7 @@
 
 #include "common.h"
 
+/* main memory function, can allocate, reallocate, and free pointers */
 void* wolf_realloc(void* ptr, size_t old_size, size_t new_size);
 
 #define min(a,b) \
