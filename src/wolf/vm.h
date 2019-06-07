@@ -117,6 +117,7 @@ typedef struct {
     isize_t            len;
     uint8_t*           code;
     wolf_line_array_t  lines;
+    wolf_object_t*     objects;
 } wolf_bytecode_t;
 
 /* inits bytecode, must be done before use */

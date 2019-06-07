@@ -334,7 +334,7 @@ static inline void literal(wolf_parser_t* this) {
 
 static inline void string(wolf_parser_t* this) {
     emit_constant(this, WOLF_VALUE_OBJECT(
-        (wolf_object_t*)wolf_object_string_copy(this->previous.data + 1, this->previous.len - 2)));
+        (wolf_object_t*)wolf_object_string_copy(this->bytecode, this->previous.data + 1, this->previous.len - 2)));
 }
 
 

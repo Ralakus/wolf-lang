@@ -28,10 +28,14 @@ bool wolf_object_is_type(wolf_value_t value, wolf_object_type_t type);
 #define WOLF_OBJECT_AS_CSTRING(value) (WOLF_OBJECT_AS_STRING(value)->str)
 
 /* makes string object from c string */
-wolf_object_string_t* wolf_object_string_copy(const char* chars, isize_t len);
+wolf_object_string_t* wolf_object_string_copy(wolf_bytecode_t* bytecode, const char* chars, isize_t len);
 
 /* makes string object from c string, takes ownership of c string */
-wolf_object_string_t* wolf_object_string_take(char* chars, isize_t len);
+wolf_object_string_t* wolf_object_string_take(wolf_bytecode_t* bytecode, char* chars, isize_t len);
 
 /* prints object's value */
 void wolf_object_print(wolf_value_t value);
+
+/* frees all objects in bytecode */
+void wolf_objects_free(wolf_bytecode_t* bytecode);
+

@@ -155,12 +155,14 @@ void wolf_bytecode_init(wolf_bytecode_t* this) {
     this->code      = NULL;
     wolf_value_array_init(&this->constants);
     wolf_line_array_init(&this->lines);
+    this->objects   = NULL;
 }
 
 void wolf_bytecode_free(wolf_bytecode_t* this) {
     this->code = WOLF_FREE_ARRAY(uint8_t, this->code, this->alloc_len);
     wolf_value_array_free(&this->constants);
     wolf_line_array_free(&this->lines);
+    wolf_objects_free(this);
     wolf_bytecode_init(this);
 }
 
@@ -489,7 +491,7 @@ static inline void concat(wolf_vm_t* this) {
     memcpy(chars + a->len, b->str, b->len);
     chars[len] = '\0';
 
-    wolf_object_string_t* result = wolf_object_string_take(chars, len);
+    wolf_object_string_t* result = wolf_object_string_take(this->bytecode, chars, len);
     wolf_vm_push(this, WOLF_VALUE_OBJECT((wolf_object_t*)result));
 }
 
