@@ -11,7 +11,7 @@
 
 */
 
-#ifndef WOLF_NO_ANSI_COLOR
+#ifndef WOLF_NO_ANSI_COLOUR
 
 #define WOLF_ANSI_RED     "\x1b[31m"
 #define WOLF_ANSI_GREEN   "\x1b[32m"
