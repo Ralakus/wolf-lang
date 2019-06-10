@@ -50,8 +50,7 @@ bool wolf_value_is_equal(wolf_value_t a, wolf_value_t b) {
             case WOLF_VALUE_TYPE_OBJECT: {
                 wolf_object_string_t* a_str = WOLF_OBJECT_AS_STRING(a);
                 wolf_object_string_t* b_str = WOLF_OBJECT_AS_STRING(b);
-                return a_str->len == b_str->len &&
-                    memcmp(a_str->str, b_str->str, a_str->len) == 0;
+                return wolf_str_equal(a_str->str.buf, b_str->str.buf);
             } break;
                 
             default:
@@ -485,13 +484,7 @@ static inline void concat(wolf_vm_t* this) {
     wolf_object_string_t* b = WOLF_OBJECT_AS_STRING(wolf_vm_pop(this));
     wolf_object_string_t* a = WOLF_OBJECT_AS_STRING(wolf_vm_pop(this));
 
-    isize_t len = a->len + b->len;
-    char* chars = WOLF_ALLOCATE(char, len + 1);
-    memcpy(chars, a->str, a->len);
-    memcpy(chars + a->len, b->str, b->len);
-    chars[len] = '\0';
-
-    wolf_object_string_t* result = wolf_object_string_take(this->bytecode, chars, len);
+    wolf_object_string_t* result = wolf_object_string_concat(this->bytecode, a, b);
     wolf_vm_push(this, WOLF_VALUE_OBJECT((wolf_object_t*)result));
 }
 

@@ -22,25 +22,39 @@ static inline wolf_object_t* allocate_object(wolf_bytecode_t* bytecode, size_t s
     return object;
 }
 
-static inline wolf_object_string_t* allocate_string(wolf_bytecode_t* bytecode, char* chars, isize_t len) {
-    wolf_object_string_t* string = ALLOCATE_OBJECT(bytecode, wolf_object_string_t, WOLF_OBJECT_TYPE_STRING);
-    string->len = len;
-    string->str = chars;
+static inline wolf_object_string_t* allocate_string(wolf_bytecode_t* bytecode, const char* chars, isize_t len) {
+    wolf_object_string_t* string =
+        (wolf_object_string_t*)allocate_object(bytecode, sizeof(wolf_object_string_t) + len + 1, WOLF_OBJECT_TYPE_STRING);
+    string->str.len = len;
+    if(memcpy(string->str.buf, chars, len) == NULL) {
+        return NULL;
+    }
 
     return string;
 }
 
-
 wolf_object_string_t* wolf_object_string_copy(wolf_bytecode_t* bytecode, const char* chars, isize_t len) {
-    char* heap_chars = WOLF_ALLOCATE(char, len + 1);
-    memcpy(heap_chars, chars, len);
-    heap_chars[len] = '\0';
-
-    return allocate_string(bytecode, heap_chars, len);
+    return allocate_string(bytecode, chars, len);
 }
 
-wolf_object_string_t* wolf_object_string_take(wolf_bytecode_t* bytecode, char* chars, isize_t len) {
-    return allocate_string(bytecode, chars, len);
+wolf_object_string_t* wolf_object_string_concat(wolf_bytecode_t* bytecode, const wolf_object_string_t* str1, const wolf_object_string_t* str2) {
+    isize_t str1len = wolf_str_len(str1->str.buf);
+    isize_t str2len = wolf_str_len(str2->str.buf);
+    isize_t len = str1len + str2len;
+    wolf_object_string_t* string =
+        (wolf_object_string_t*)allocate_object(bytecode, sizeof(wolf_object_string_t) + len + 1, WOLF_OBJECT_TYPE_STRING);
+    if(memcpy(string->str.buf, str1->str.buf, str1len) == NULL) {
+        return NULL;
+    }
+    if(memcpy(string->str.buf + str1len, str2->str.buf, str2len) == NULL) {
+        return NULL;
+    }
+
+    string->str.buf[len]  ='\0';
+    string->str.alloc_len = len;
+    string->str.len       = len;
+
+    return string;
 }
 
 void wolf_object_print(wolf_value_t value) {
@@ -51,11 +65,10 @@ void wolf_object_print(wolf_value_t value) {
     }
 }
 
+
 static void wolf_object_free(wolf_object_t* object) {
     switch(object->type) {
         case WOLF_OBJECT_TYPE_STRING: {
-            wolf_object_string_t* str = (wolf_object_string_t*)object;
-            WOLF_FREE_ARRAY(char, str->str, str->len + 1);
             WOLF_FREE(wolf_object_string_t, object);
             break;
         }
