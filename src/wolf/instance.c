@@ -62,10 +62,11 @@ void wolf_set_debug_mode(wolf_t* this, bool value) {
 }
 
 bool wolf_load(wolf_t* this, const char* code) {
+    bool file_loaded = this->file_loaded;
     wolf_unload(this);
+    this->file_loaded = file_loaded;
     if(code==NULL) return false;
     this->loaded      = true;
-    this->file_loaded = false;
     this->source      = code;
 
     bool result = wolf_parser_parse(&this->parser, &this->bytecode, this->source);
@@ -79,6 +80,7 @@ bool wolf_load(wolf_t* this, const char* code) {
         return true;
     }
 }
+
 bool wolf_load_file(wolf_t* this, const char* file_name) {
     wolf_unload(this);
 
@@ -86,10 +88,10 @@ bool wolf_load_file(wolf_t* this, const char* file_name) {
     if(source == NULL) {
         return false;
     }
+    this->file_loaded = true;
 
     bool result = wolf_load(this, source);
     if(result) {
-        this->file_loaded = true;
         return true;
     } else {
         wolf_unload(this);
@@ -107,6 +109,7 @@ bool wolf_load_bytecode(wolf_t* this, wolf_bytecode_t bytecode) {
     }
     return true;
 }
+
 bool wolf_load_bytecode_file(wolf_t* this, const char* file_name) {
     wolf_unload(this);
 

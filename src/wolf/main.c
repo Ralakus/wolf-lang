@@ -18,13 +18,15 @@
 #include "repl.h"
 #include "instance.h"
 
-
 #include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
 
-int main(int argc, char* argv[]) {
+#define WOLF_LANGUAGE_STR "Wolf language"
+#define WOLF_VERSION_STR "0.1.0"
+const char wolf_program_desc[] = WOLF_LANGUAGE_STR" "WOLF_VERSION_STR;
 
+int main(int argc, char* argv[]) {
     wolf_arg_parser_t arg_parser;
     wolf_arg_parser_init(&arg_parser);
 
@@ -61,12 +63,12 @@ int main(int argc, char* argv[]) {
 
     if(argc == 1) {
         wolf_errorln("Expected arguments!");
-        wolf_arg_parser_print_help(&arg_parser, "Wolf language 0.1.0");
+        wolf_arg_parser_print_help(&arg_parser, wolf_program_desc);
         return 1;
     }
 
     if(arg_help.found) {
-        wolf_arg_parser_print_help(&arg_parser, "Wolf language 0.1.0");
+        wolf_arg_parser_print_help(&arg_parser, wolf_program_desc);
 
         wolf_arg_free(&arg_help);
         wolf_arg_free(&arg_debug);
@@ -86,7 +88,6 @@ int main(int argc, char* argv[]) {
         };
         wolf_repl(&params);
     } else {
-
         wolf_t instance;
         wolf_init(&instance);
 
@@ -112,7 +113,6 @@ int main(int argc, char* argv[]) {
         }
 
         if(arg_bytecode.found) {
-
             if(!wolf_load_bytecode_file(&instance, file_name)) {
                 wolf_errorln("Failed to load bytecode file!");
 
@@ -125,8 +125,9 @@ int main(int argc, char* argv[]) {
 
                 wolf_arg_parser_free(&arg_parser);
 
-                return 1;
+                wolf_free(&instance);
 
+                return 1;
             }
 
             if(!wolf_run(&instance)) {
@@ -141,13 +142,14 @@ int main(int argc, char* argv[]) {
 
                 wolf_arg_parser_free(&arg_parser);
 
+                wolf_free(&instance);
+
                 return 1;
             }
 
 
 
         } else if(arg_compile.found) {
-
             const char* output = NULL;
             if(arg_output.found) {
                 output = arg_output.preceeding_args[0];
@@ -157,6 +159,19 @@ int main(int argc, char* argv[]) {
 
             if(!wolf_load_file(&instance, file_name)) {
                 wolf_errorln("Failed to load source file!");
+
+                wolf_arg_free(&arg_help);
+                wolf_arg_free(&arg_debug);
+                wolf_arg_free(&arg_compile);
+                wolf_arg_free(&arg_bytecode);
+                wolf_arg_free(&arg_output);
+                wolf_arg_free(&arg_repl);
+
+                wolf_arg_parser_free(&arg_parser);
+
+                wolf_free(&instance);
+
+                return 1;
             }
 
             size_t slen = 0;
@@ -182,7 +197,6 @@ int main(int argc, char* argv[]) {
             fclose(out);
 
             free(serialized);
-
         } else {
             if(!wolf_load_file(&instance, file_name)) {
                 wolf_errorln("Failed to load source file!");
@@ -195,6 +209,8 @@ int main(int argc, char* argv[]) {
                 wolf_arg_free(&arg_repl);
 
                 wolf_arg_parser_free(&arg_parser);
+
+                wolf_free(&instance);
 
                 return 1;
             }
@@ -211,12 +227,13 @@ int main(int argc, char* argv[]) {
 
                 wolf_arg_parser_free(&arg_parser);
 
+                wolf_free(&instance);
+
                 return 1;
             }
         }
 
         wolf_free(&instance);
-
     }
 
     wolf_arg_free(&arg_help);
