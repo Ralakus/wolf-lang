@@ -19,8 +19,12 @@ workspace "wolf-lang"
 
     if is_64_bit then
         architecture "x64"
+
+        defines { "WOLF_64_BIT" }
     else
         architecture "x86"
+
+        defines { "WOLF_32_BIT" }
     end
 
     configurations { "Debug", "Release" }
@@ -30,54 +34,25 @@ workspace "wolf-lang"
         optimize "Off"
         buildoptions { "-Wall", "-Wextra" }
 
+        defines { "DEBUG" }
+
+        if linux and coverage_test then 
+            buildoptions { "-fprofile-arcs", "-ftest-coverage" }
+            linkoptions  { "-fprofile-arcs", "-ftest-coverage" }
+        end
+
     filter { "configurations:Release" }
         symbols "On"
         optimize "Speed"
         buildoptions { "-Ofast" }
         linkoptions  { "-flto", "-static" }
+
+        defines { "NDEBUG" }
         
     filter { }
 
     targetdir "build/bin/"
     objdir    "build/obj/"
-
-project "wolf"
-    kind "ConsoleApp"
-
-    includedirs "src/wolf"
-
-    files {
-        "src/wolf/main.c",
-        "src/wolf/vm.c",
-        "src/wolf/lexer.c",
-        "src/wolf/object.c",
-        "src/wolf/parser.c",
-        "src/wolf/repl.c",
-        "src/wolf/instance.c",
-        "src/wolf/util/logger.c",
-        "src/wolf/util/memory.c",
-        "src/wolf/util/arg_parser.c",
-        "src/wolf/util/string.c",
-    }
-    
-    if is_64_bit then
-        defines { "WOLF_64_BIT" }
-    else 
-        defines { "WOLF_32_BIT" }
-    end
-
-    filter "configurations:Debug"
-        defines { "DEBUG" }
-
-        if build_os == linux and coverage_test then 
-            buildoptions { "-fprofile-arcs", "-ftest-coverage" }
-            linkoptions  { "-fprofile-arcs", "-ftest-coverage" }
-        end
-
-    filter "configurations:Release"
-        defines { "NDEBUG" }
-
-    filter {}
 
 project "lwolf"
     kind "StaticLib"
@@ -91,27 +66,19 @@ project "lwolf"
         "src/wolf/parser.c",
         "src/wolf/repl.c",
         "src/wolf/instance.c",
+        
         "src/wolf/util/logger.c",
         "src/wolf/util/memory.c",
         "src/wolf/util/arg_parser.c",
         "src/wolf/util/string.c",
     }
 
-    if is_64_bit then
-        defines { "WOLF_64_BIT" }
-    else 
-        defines { "WOLF_32_BIT" }
-    end
+project "wolf"
+    kind "ConsoleApp"
 
-    filter "configurations:Debug"
-        defines { "DEBUG" }
+    includedirs "src/wolf"
+    links "lwolf"
 
-        if build_os == linux and coverage_test then 
-            buildoptions { "-fprofile-arcs", "-ftest-coverage" }
-            linkoptions  { "-fprofile-arcs", "-ftest-coverage" }
-        end
-
-    filter "configurations:Release"
-        defines { "NDEBUG" }
-
-    filter {}
+    files {
+        "src/wolf/main.c",
+    }
