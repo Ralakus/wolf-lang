@@ -504,7 +504,7 @@ static inline void runtime_error(wolf_vm_t* this, const char* fmt, ...) {
 
 static wolf_interpret_result_t run(wolf_vm_t* this) {
     #define READ_BYTE() (*this->ip++)
-    #define READ_SHORT() (this->ip += 2, (uint16_t)((this->ip[-2] << 8) | this->ip[-1]))
+    #define READ_SHORT() (this->ip += 2, (uint16_t)((this->ip[-1] << 8) | this->ip[-2]))
     #define READ_CONSTANT() (this->bytecode->constants.values[READ_BYTE()])
     #define READ_CONSTANT_L() (this->bytecode->constants.values[READ_SHORT()])
 

@@ -11,6 +11,8 @@
 
 */
 
+#ifndef WOLF_NO_ANSI_COLOR
+
 #define WOLF_ANSI_RED     "\x1b[31m"
 #define WOLF_ANSI_GREEN   "\x1b[32m"
 #define WOLF_ANSI_YELLOW  "\x1b[33m"
@@ -18,6 +20,18 @@
 #define WOLF_ANSI_MAGENTA "\x1b[35m"
 #define WOLF_ANSI_CYAN    "\x1b[36m"
 #define WOLF_ANSI_RESET   "\x1b[0m"
+
+#else
+
+#define WOLF_ANSI_RED     ""
+#define WOLF_ANSI_GREEN   ""
+#define WOLF_ANSI_YELLOW  ""
+#define WOLF_ANSI_BLUE    ""
+#define WOLF_ANSI_MAGENTA ""
+#define WOLF_ANSI_CYAN    ""
+#define WOLF_ANSI_RESET   ""
+
+#endif
 
 #include "common.h"
 

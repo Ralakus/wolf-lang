@@ -59,7 +59,7 @@ project "wolf"
         "src/wolf/util/arg_parser.c",
         "src/wolf/util/string.c",
     }
-
+    
     if is_64_bit then
         defines { "WOLF_64_BIT" }
     else 
