@@ -1,6 +1,6 @@
 import util/common
 
-{.push header: "\"wolf/vm.h\"".}
+{.push header: "\"vm.h\"".}
 
 ##  ================================
 ##

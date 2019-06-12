@@ -1,7 +1,7 @@
 import
   common
 
-{.push header: "\"wolf/util/arg_parser.h\"".}
+{.push header: "\"util/arg_parser.h\"".}
 
 ##  ================================
 ##

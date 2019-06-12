@@ -9,7 +9,7 @@
 ##
 ##
 
-{.push header: "\"wolf/util/logger.h\"".}
+{.push header: "\"util/logger.h\"".}
 
 when not defined(WOLF_NO_ANSI_COLOUR):
   const
