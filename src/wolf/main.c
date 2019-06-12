@@ -24,7 +24,7 @@
 
 #define WOLF_LANGUAGE_STR "Wolf language"
 #define WOLF_VERSION_STR "0.1.0"
-const char wolf_program_desc[] = WOLF_LANGUAGE_STR" "WOLF_VERSION_STR;
+const char wolf_program_desc[] = "Wolf language 0.1.0";
 
 int main(int argc, char* argv[]) {
     wolf_arg_parser_t arg_parser;
@@ -83,9 +83,8 @@ int main(int argc, char* argv[]) {
     }
 
     if(arg_repl.found) {
-        wolf_repl_params_t params = (wolf_repl_params_t){
-            .debug_mode = arg_debug.found
-        };
+        wolf_repl_params_t params;
+        params.debug_mode = arg_debug.found;
         wolf_repl(&params);
     } else {
         wolf_t instance;
