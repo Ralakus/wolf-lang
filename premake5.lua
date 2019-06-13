@@ -31,8 +31,7 @@ workspace "wolf-lang"
 
     filter { "configurations:Debug" }
         symbols "On"
-        optimize "Off"
-        buildoptions { "-Wall", "-Wextra" }
+        buildoptions { "-Wall", "-Wextra", "-O0" }
 
         defines { "DEBUG" }
 
@@ -43,7 +42,6 @@ workspace "wolf-lang"
 
     filter { "configurations:Release" }
         symbols "On"
-        optimize "Speed"
         buildoptions { "-Ofast" }
         linkoptions  { "-flto", "-static" }
 
