@@ -2,13 +2,14 @@
 
 version       = "0.1.0"
 author        = "Ralakus"
-description   = "Wolf programming language"
+description   = "A simple programming language"
 license       = "MIT"
-srcDir        = "src/wolf"
+srcDir        = "src"
 bin           = @["wolf"]
-binDir        = "build/nim/bin"
+binDir        = "build"
+
 
 
 # Dependencies
 
-requires "nim >= 0.20.0"
+requires "nim >= 0.20.0" # , "msgpack4nim"

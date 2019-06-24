@@ -8,14 +8,9 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/build/bin/wolf",
-            "args": [ "test/little.wolf", "-d" ],
+            "program": "${workspaceFolder}/build/wolf",
+            "args": [],
             "cwd": "${workspaceFolder}",
-            "stdio": {
-                "stdin":  null,
-                "stdout": null,
-                "stderr": null
-            },
             "terminal": "integrated"
         }
     ]

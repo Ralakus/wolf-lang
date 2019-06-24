@@ -1,4 +1,3 @@
-
 ifndef config
   config=debug
 endif
@@ -9,8 +8,8 @@ else
   $(error "invalid configuration $(config)")
 endif
 
-all:
-	premake5 gmake2 && make -C ./build config=$(config) && nimble build -d:$(config)
+build/wolf: src/**.nim src/util/**.nim wolf.nimble
+	nimble build -d:$(config) --verbose
 
-clean: build
+clean:
 	rm -r build
