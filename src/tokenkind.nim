@@ -1,6 +1,6 @@
 
 type
-    TokenType* = enum
+    TokenKind* = enum
         # Single char tokens
         lparen
         rparen
@@ -119,5 +119,5 @@ const tokenStrMap: array[eof.int + 1, string] = [
     "eof"
 ]
 
-proc `$`*(token: TokenType): string =
+proc `$`*(token: TokenKind): string =
     tokenStrMap[token.int]

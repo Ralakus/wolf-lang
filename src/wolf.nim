@@ -1,5 +1,5 @@
 
-import tokentypes
+import tokenkind
 import system
 import lexer
 
@@ -11,7 +11,7 @@ proc main(): int =
     lex.initLexer(source[0].unsafeAddr)
 
     var tok: Token
-    while tok.kind != TokenType.eof:
+    while tok.kind != TokenKind.eof:
         tok = lex.scanNext()
         echo $tok
 
