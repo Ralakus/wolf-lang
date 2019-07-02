@@ -7,7 +7,7 @@ license       = "MIT"
 srcDir        = "src"
 bin           = @["wolf"]
 binDir        = "build"
-
+backend       = "c"
 
 
 # Dependencies

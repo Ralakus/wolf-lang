@@ -75,6 +75,7 @@ proc skipWhitespace(lexer: var Lexer) {.inline.} =
             of '\n': 
                 lexer.pos.line += 1
                 lexer.pos.col  = 1
+                discard lexer.advance()
             of ' ', '\r', '\t':
                 discard lexer.advance()
             of '#':

@@ -5,15 +5,15 @@ import lexer
 
 proc main(): int =
 
-    let source = readLine(stdin)
-
+    let source = readFile("test/big.wolf")
+    
     var lex = Lexer()
     lex.initLexer(source[0].unsafeAddr)
 
     var tok: Token
     while tok.kind != TokenKind.eof:
         tok = lex.scanNext()
-        echo $tok
+        # echo $tok
 
     0
 
