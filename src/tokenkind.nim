@@ -2,63 +2,63 @@
 type
     TokenKind* = enum
         # Single char tokens
-        lparen
-        rparen
-        lcurly
-        rcurly
-        lbracket
-        rbracket
+        tkLparen
+        tkRparen
+        tkLcurly
+        tkRcurly
+        tkLbracket
+        tkRbracket
 
-        comma
-        dot
-        semicolon
+        tkComma
+        tkDot
+        tkSemicolon
 
-        plus
-        minus
-        star
-        slash
+        tkPlus
+        tkMinus
+        tkStar
+        tkSlash
 
         # One or two char tokens
-        bang
-        bangEqual
-        equal
-        equalEqual
-        greater
-        greaterEqual
-        less
-        lessEqual
+        tkBang
+        tkBangEqual
+        tkEqual
+        tkEqualEqual
+        tkGreater
+        tkGreaterEqual
+        tkLess
+        tkLessEqual
 
-        colon
-        colonColon
+        tkColon
+        tkColonColon
 
         # Literals
-        identifier
-        string
-        interpolation
-        number
+        tkIdentifier
+        tkString
+        tkInterpolation
+        tkNumber
 
         # Keywords
-        kwAnd
-        kwOr
+        tkKwAnd
+        tkKwOr
 
-        kwSelf
-        kwStruct
-        kwReturn
+        tkKwSelf
+        tkKwStruct
+        tkKwReturn
 
-        kwIf
-        kwElse
-        kwWhile
-        kwFor
-        kwBreak
+        tkKwIf
+        tkKwElse
+        tkKwWhile
+        tkKwFor
+        tkKwBreak
 
-        kwTrue
-        kwFalse
-        kwNil
+        tkKwTrue
+        tkKwFalse
+        tkKwNil
 
-        err
-        eof
+        tkErr
+        tkEof
 
-const tokenStrMap: array[eof.int + 1, string] = [
+const tokenStrMap: array[tkEof.int + 1, string] = [
 
     # Single char tokens
     "(",

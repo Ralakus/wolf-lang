@@ -15,10 +15,10 @@ type
         pos*:  Position
 
 proc `$`*(token: Token): string =
-    if(token.kind != TokenKind.eof):
+    if(token.kind != tkEof):
         return fmt"{$token.kind:<12}" & " : " & fmt"{($token.data)[0..<token.len]:<16}" & " : (" & $token.pos.line & "," & $token.pos.col & ")"
     else:
-        return fmt"{$TokenKind.eof:<12}" & " : " & fmt"""{"\\0":<16}""" & " : (" & $token.pos.line & "," & $token.pos.col & ")"
+        return fmt"{$tkEof:<12}" & " : " & fmt"""{"\\0":<16}""" & " : (" & $token.pos.line & "," & $token.pos.col & ")"
 
 type
     Lexer* = object
@@ -91,7 +91,7 @@ proc number(lexer: var Lexer): Token {.inline.} =
         while lexer.peek().isDigit():
             discard lexer.advance()
 
-    lexer.makeToken(TokenKind.number)
+    lexer.makeToken(tkNumber)
 
 func matchKeyword(lexer: Lexer, str: string, depth: int): bool {.inline.} =
     if(lexer.current - lexer.start == str.len()):
@@ -106,74 +106,74 @@ proc identifier(lexer: var Lexer): Token {.inline.} =
     case lexer.start[0]:
         of 'a':
             if lexer.matchKeyword("and", 1):
-                return lexer.makeToken(TokenKind.kwAnd)
+                return lexer.makeToken(tkKwAnd)
         of 'b':
             if lexer.matchKeyword("break", 1):
-                return lexer.makeToken(TokenKind.kwBreak)
+                return lexer.makeToken(tkKwBreak)
         of 'e':
             if lexer.matchKeyword("else", 1):
-                return lexer.makeToken(TokenKind.kwElse)
+                return lexer.makeToken(tkKwElse)
         of 'f':
             if lexer.current - lexer.start > 1:
                 case lexer.start[1]:
                     of 'a':
                         if lexer.matchKeyword("false", 2):
-                            return lexer.makeToken(TokenKind.kwFalse)
+                            return lexer.makeToken(tkKwFalse)
                     of 'o':
                         if lexer.matchKeyword("for", 2):
-                            return lexer.makeToken(TokenKind.kwFor)
+                            return lexer.makeToken(tkKwFor)
                     else:
-                        return lexer.makeToken(TokenKind.identifier)
+                        return lexer.makeToken(tkIdentifier)
 
         of 'i':
             if lexer.matchKeyword("if", 1):
-                return lexer.makeToken(TokenKind.kwIf)
+                return lexer.makeToken(tkKwIf)
 
         of 'n':
             if lexer.matchKeyword("nil", 1):
-                return lexer.makeToken(TokenKind.kwNil)
+                return lexer.makeToken(tkKwNil)
 
         of 'o':
             if lexer.matchKeyword("or", 1):
-                return lexer.makeToken(TokenKind.kwOr)
+                return lexer.makeToken(tkKwOr)
         
         of 'r':
             if lexer.matchKeyword("return", 1):
-                return lexer.makeToken(TokenKind.kwReturn)
+                return lexer.makeToken(tkKwReturn)
 
         of 's':
             if lexer.current - lexer.start > 1:
                 case lexer.start[1]:
                     of 'e':
                         if lexer.matchKeyword("self", 2):
-                            return lexer.makeToken(TokenKind.kwSelf)
+                            return lexer.makeToken(tkKwSelf)
                         if lexer.matchKeyword("struct", 2):
-                            return lexer.makeToken(TokenKind.kwStruct)
+                            return lexer.makeToken(tkKwStruct)
                     else:
-                        return lexer.makeToken(TokenKind.identifier)
+                        return lexer.makeToken(tkIdentifier)
         of 't':
             if lexer.matchKeyword("true", 1):
-                return lexer.makeToken(TokenKind.kwTrue)
+                return lexer.makeToken(tkKwTrue)
 
         of 'w':
             if lexer.matchKeyword("while", 1):
-                return lexer.makeToken(TokenKind.kwWhile)
+                return lexer.makeToken(tkKwWhile)
                 
         else:
-            return lexer.makeToken(TokenKind.identifier)
+            return lexer.makeToken(tkIdentifier)
 
-    lexer.makeToken(TokenKind.identifier)
+    lexer.makeToken(tkIdentifier)
 
 proc string(lexer: var Lexer): Token {.inline.} =
     while lexer.peek() != '\"' and not lexer.isAtEnd():
         discard lexer.advance()
     
     if lexer.isAtEnd():
-        return lexer.makeToken(TokenKind.err)
+        return lexer.makeToken(tkErr)
 
     discard lexer.advance()
 
-    lexer.makeToken(TokenKind.string)
+    lexer.makeToken(tkString)
 
 ## Scans for next token in loaded string
 proc scanNext*(lexer: var Lexer): Token {.inline.} =
@@ -183,7 +183,7 @@ proc scanNext*(lexer: var Lexer): Token {.inline.} =
 
     if lexer.isAtEnd():
         discard lexer.advance()
-        return lexer.makeToken(TokenKind.eof)
+        return lexer.makeToken(tkEof)
 
     let c = lexer.advance()
     if c.isAlpha():
@@ -192,33 +192,33 @@ proc scanNext*(lexer: var Lexer): Token {.inline.} =
         return lexer.number()
 
     case c:
-        of '(': return lexer.makeToken(TokenKind.lparen)
-        of ')': return lexer.makeToken(TokenKind.rparen)
-        of '{': return lexer.maketoken(TokenKind.lcurly)
-        of '}': return lexer.maketoken(TokenKind.rcurly)
-        of '[': return lexer.maketoken(TokenKind.lbracket)
-        of ']': return lexer.maketoken(TokenKind.rbracket)
+        of '(': return lexer.makeToken(tkLparen)
+        of ')': return lexer.makeToken(tkRparen)
+        of '{': return lexer.maketoken(tkLcurly)
+        of '}': return lexer.maketoken(tkRcurly)
+        of '[': return lexer.maketoken(tkLbracket)
+        of ']': return lexer.maketoken(tkRbracket)
 
-        of ',': return lexer.maketoken(TokenKind.comma)
-        of '.': return lexer.maketoken(TokenKind.dot)
-        of ';': return lexer.maketoken(TokenKind.semicolon)
+        of ',': return lexer.maketoken(tkComma)
+        of '.': return lexer.maketoken(tkDot)
+        of ';': return lexer.maketoken(tkSemicolon)
 
-        of '+': return lexer.maketoken(TokenKind.plus)
-        of '-': return lexer.maketoken(TokenKind.minus)
-        of '*': return lexer.maketoken(TokenKind.star)
-        of '/': return lexer.maketoken(TokenKind.slash)
+        of '+': return lexer.maketoken(tkPlus)
+        of '-': return lexer.maketoken(tkMinus)
+        of '*': return lexer.maketoken(tkStar)
+        of '/': return lexer.maketoken(tkSlash)
 
         of '!':
-            return lexer.makeToken(if lexer.match('='): TokenKind.bangEqual else: TokenKind.bang)
+            return lexer.makeToken(if lexer.match('='): tkBangEqual else: tkBang)
         of '=':
-            return lexer.makeToken(if lexer.match('='): TokenKind.equalEqual else: TokenKind.equal)
+            return lexer.makeToken(if lexer.match('='): tkEqualEqual else: tkEqual)
         of '<':
-            return lexer.makeToken(if lexer.match('='): TokenKind.lessEqual else: TokenKind.less)
+            return lexer.makeToken(if lexer.match('='): tkLessEqual else: tkLess)
         of '>':
-            return lexer.makeToken(if lexer.match('='): TokenKind.greaterEqual else: TokenKind.greater)
+            return lexer.makeToken(if lexer.match('='): tkGreaterEqual else: tkGreater)
         of ':':
-            return lexer.makeToken(if lexer.match(':'): TokenKind.colonColon else: TokenKind.colon)
+            return lexer.makeToken(if lexer.match(':'): tkColonColon else: tkColon)
 
         of '\"': return lexer.string()
 
-        else: return lexer.makeToken(TokenKind.err)
+        else: return lexer.makeToken(tkErr)

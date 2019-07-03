@@ -54,6 +54,7 @@ proc main(): int =
     if debugLevel > 0:
         noticeln(inputFile, " size: ", $inputFileSize)
 
+
     var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
     defer:
         memMap.close()
@@ -65,7 +66,7 @@ proc main(): int =
         noticeln("Tokens: ")
 
     var tok: Token
-    while tok.kind != TokenKind.eof:
+    while tok.kind != tkEof:
         tok = lex.scanNext()
         if debugLevel > 1:
             noticeln($tok)

@@ -25,13 +25,13 @@ proc repl*(debugLevelIn: int): bool =
         lex.initLexer(line[0].unsafeAddr())
 
         var tok: Token
-        while tok.kind != TokenKind.eof:
+        while tok.kind != tkEof:
             tok = lex.scanNext()
 
-            if onFirstTok and tok.kind == TokenKind.colon:
+            if onFirstTok and tok.kind == tkColon:
                 onCommand = true
                 tok = lex.scanNext()
-                if tok.kind == TokenKind.identifier:
+                if tok.kind == tkIdentifier:
                     var args = strSplit($(tok.data))
                     case args[0]:
                         of "exit":
