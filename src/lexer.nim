@@ -1,8 +1,8 @@
 
-import tokenkind
-import util/ptrmath
-import system
-import strformat
+import
+    tokenkind, util/ptrmath, system, strformat
+export
+    tokenkind
 
 type
     Position* = tuple[line: int32, col: int32]
@@ -25,6 +25,7 @@ type
         start: ptr char
         current: ptr char
         pos: Position
+        startPos: Position
 
 proc initLexer*(lexer: var Lexer, source: ptr char) {.inline.} =
     lexer.pos = (1.int32, 1.int32)
@@ -49,15 +50,11 @@ func isAlpha(c: char): bool {.inline.} =
     (c == '_')
 
 func makeToken(lexer: Lexer, kind: TokenKind): Token {.inline.} =
-    Token(kind: kind, data: lexer.start, len: lexer.current - lexer.start, pos: lexer.pos)
+    Token(kind: kind, data: lexer.start, len: lexer.current - lexer.start, pos: lexer.startPos)
 
 proc advance(lexer: var Lexer): char {.inline.} =
     lexer.pos.col += 1
     lexer.current += 1
-
-    if lexer.current[-1] == '\n':
-        lexer.pos.line += 1
-        lexer.pos.col   = 1
 
     lexer.current[-1]
 
@@ -66,7 +63,7 @@ proc match(lexer: var Lexer, expected: char): bool {.inline.} =
     if lexer.current[] != expected: return false
 
     discard lexer.advance()
-    return true
+    true
 
 proc skipWhitespace(lexer: var Lexer) {.inline.} = 
     while true:
@@ -74,7 +71,7 @@ proc skipWhitespace(lexer: var Lexer) {.inline.} =
         case c:
             of '\n': 
                 lexer.pos.line += 1
-                lexer.pos.col  = 1
+                lexer.pos.col   = 0
                 discard lexer.advance()
             of ' ', '\r', '\t':
                 discard lexer.advance()
@@ -182,6 +179,7 @@ proc string(lexer: var Lexer): Token {.inline.} =
 proc scanNext*(lexer: var Lexer): Token {.inline.} =
     lexer.skipWhitespace()
     lexer.start = lexer.current
+    lexer.startPos = lexer.pos
 
     if lexer.isAtEnd():
         discard lexer.advance()

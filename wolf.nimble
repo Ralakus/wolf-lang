@@ -7,9 +7,9 @@ license       = "MIT"
 srcDir        = "src"
 bin           = @["wolf"]
 binDir        = "build"
-backend       = "c"
+backend       = "cpp"
 
 
 # Dependencies
 
-requires "nim >= 0.20.0" # , "msgpack4nim"
+requires "nim >= 0.20.0" , "msgpack4nim", "argparse"
