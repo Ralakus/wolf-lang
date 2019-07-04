@@ -69,35 +69,6 @@ proc main(): int =
         discard
 
     0
-
-proc lexerSpeedTest(): int = 
-
-    const debugLevel = 0
-
-    let inputFile = paramStr(1)
-    let inputFileSize = getFileSize(inputFile).int
-
-    if debugLevel > 0:
-        noticeln(inputFile, " size: ", $inputFileSize)
-
-
-    var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
-    defer:
-        memMap.close()
-
-    var lex = Lexer()
-    lex.initLexer(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)))
-
-    if debugLevel > 1:
-        noticeln("Tokens: ")
-
-    var tok: Token
-    while tok.kind != tkEof:
-        tok = lex.scanNext()
-        if debugLevel > 1:
-            noticeln($tok)
-
-    0
     
 when isMainModule:
     system.quit(main())
