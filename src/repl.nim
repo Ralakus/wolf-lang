@@ -57,9 +57,12 @@ proc repl*(debugLevelIn: int): bool =
             onFirstTok = false
 
         if not onCommand:
-            var ast = parse(line[0].unsafeAddr(), debugLevel)
-            if debugLevel >= debugAstPrintLevel:
-                echo $ast
+            try:
+                var ast = parse(line[0].unsafeAddr(), debugLevel)
+                if debugLevel >= debugAstPrintLevel:
+                    echo $ast
+            except:
+                discard
 
         onCommand = false
 

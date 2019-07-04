@@ -61,9 +61,12 @@ proc main(): int =
     defer:
         memMap.close()
 
-    var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
-    if debugLevel >= debugAstPrintLevel:
-        echo $ast
+    try:
+        var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
+        if debugLevel >= debugAstPrintLevel:
+            echo $ast
+    except:
+        discard
 
     0
 
