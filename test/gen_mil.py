@@ -13,7 +13,13 @@ except:
         pass
 
 test = file.readline()
+lines = 1_000_000
 
-for i in range(0, 999_999):
-    print(test, " == ")
+"""for i in range(0, lines - 1):
+    print("(==", test)
+print(test, end = '')
+for i in range(0, lines - 1):
+    print(")", end = '')"""
+for i in range(0, lines - 1):
+    print(test)
 print(test, end = '')

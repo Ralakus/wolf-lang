@@ -1,0 +1,12 @@
+
+(* Entry point for program *)
+program = expression, EOF;
+
+expression = atom
+           | "(", expression*, ")"
+           | "(", unary expression, ")""
+           | "(", binary expression expression, ")";
+
+atom = Number
+     | String
+     | Identifier;

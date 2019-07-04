@@ -75,9 +75,12 @@ proc skipWhitespace(lexer: var Lexer) {.inline.} =
                 discard lexer.advance()
             of ' ', '\r', '\t':
                 discard lexer.advance()
-            of '#':
-                while(lexer.peek() != '\n' and not lexer.isAtEnd() ):
-                    discard lexer.advance()
+            of ';':
+                if lexer.match(';'):
+                    while(lexer.peek() != '\n' and not lexer.isAtEnd() ):
+                        discard lexer.advance()
+                else:
+                    return
             else:
                 return
 
@@ -110,6 +113,9 @@ proc identifier(lexer: var Lexer): Token {.inline.} =
         of 'b':
             if lexer.matchKeyword("break", 1):
                 return lexer.makeToken(tkKwBreak)
+        of 'c':
+            if lexer.matchKeyword("call", 1):
+                return lexer.makeToken(tkKwCall)
         of 'e':
             if lexer.matchKeyword("else", 1):
                 return lexer.makeToken(tkKwElse)
@@ -122,12 +128,23 @@ proc identifier(lexer: var Lexer): Token {.inline.} =
                     of 'o':
                         if lexer.matchKeyword("for", 2):
                             return lexer.makeToken(tkKwFor)
+                    of 'r':
+                        if lexer.matchKeyword("from", 2):
+                            return lexer.makeToken(tkKwFrom)
                     else:
                         return lexer.makeToken(tkIdentifier)
 
         of 'i':
-            if lexer.matchKeyword("if", 1):
-                return lexer.makeToken(tkKwIf)
+            if lexer.current - lexer.start > 1:
+                case lexer.start[1]:
+                    of 'f':
+                        if lexer.matchKeyword("if", 2):
+                            return lexer.makeToken(tkKwIf)
+                    of 'm':
+                        if lexer.matchKeyword("import", 2):
+                            return lexer.makeToken(tkKwImport)
+                    else:
+                        return lexer.makeToken(tkIdentifier)
 
         of 'n':
             if lexer.matchKeyword("nil", 1):

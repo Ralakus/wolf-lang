@@ -1,105 +1,89 @@
 
 import
-    ast, lexer, util/log
+    ast, lexer, util/log, strutils, constants, streams
+export ast
 
 type
     ParserState = object
-        previous, current: Token
         lex: Lexer
-        prefixNode: AstNode
+        previous, current: Token
         debugLevel: int
-    UnexpectedToken = Exception
-    Prec = enum
-        precNone,
-        precAssignment,  # =
-        precOr,          # or
-        precAnd,         # and
-        precEquality,    # == !=
-        precComparison,  # < > <= >=
-        precTerm,        # + -
-        precFactor,      # * /
-        precUnary,       # ! -
-        precCall,        # . () []
-        precPrimary
-    ParseFn = proc(state: ref ParserState): AstNode
-    ParseRule = object
-        prefix: ParseFn
-        infix: ParseFn
-        precedence: Prec
+    ParseError* = Exception
 
-proc advance(state: ref ParserState) = 
+proc raiseException(state: ptr ParserState, msg: string) =
+    raise newException(ParseError, "line: " & $state.current.pos.line & ", col: " & $state.current.pos.col & " \n" & msg)
+
+proc advance(state: ptr ParserState) =
     state.previous = state.current
 
     state.current = state.lex.scanNext()
 
-    if state.debugLevel > 1:
+    if state.debugLevel >= debugTokenPrintLevel:
         noticeln($state.current)
 
-proc consume(state: ref ParserState, kind: TokenKind, msg: string) = 
+proc consume(state: ptr ParserState, kind: TokenKind, msg: string) = 
     if state.current.kind == kind:
         state.advance()
     else:
-        raise newException(UnexpectedToken, msg)
+        state.raiseException(msg)
 
-proc expression(state: ref ParserState): AstNode
-proc literal(state: ref ParserState): AstNode
-proc unary(state: ref ParserState): AstNode
-proc binary(state: ref ParserState): AstNode
-proc grouping(state: ref ParserState): AstNode
+proc match(state: ptr ParserState, tokens: varargs[TokenKind]): bool = 
+    for i in tokens:
+        if state.current.kind == i:
+            state.advance()
+            return true
+    false
 
-const rules: array[tkEof.int + 1, ParseRule] = [
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkLparen
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkRparen
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkLcurly
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkRcurly
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkLbracket
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkRbracket
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkComma
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkDot
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkSemicolon
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkPlus
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkMinus
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkStar
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkSlash
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkBang
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkBangEqual
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkEqual
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkEqualEqual
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkGreater
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkGreaterEqual
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkLess
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkLessEqual
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkColon
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkColonColon
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkIdentifier
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkString
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkInterpolation
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkNumber
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwAnd
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwOr
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwSelf
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwStruct
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwReturn
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwIf
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwElse
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwWhile
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwFor
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwBreak
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwTrue
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwFalse
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkKwNil
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkErr
-    ParseRule(prefix: nil, infix: nil, precedence: Prec.precNone), # tkEof
-]
+proc atom(state: ptr ParserState): AstNode = 
+    if state.match(tkNumber):
+        return initNumberNode(($state.previous.data)[0..<state.previous.len].parseFloat())
+    elif state.match(tkString):
+        return initStringNode(($state.previous.data)[0..<state.previous.len])
+    else:
+        state.raiseException("Expected expression")
 
+proc expression(state: ptr ParserState): AstNode =
+    if state.match(tkLparen):
+        if state.match(
+            tkPlus, tkMinus, tkStar, tkSlash,
+            tkEqualEqual, tkBangEqual,
+            tkGreater, tkGreaterEqual,
+            tkLess, tkLessEqual):
+            let op = state.previous.kind
+            result = initBinaryNode(op, state.expression(), state.expression())
+            state.consume(tkRparen, "Expected closing ')'")
+        elif state.match(tkBang):
+            let op = state.previous.kind
+            result = initUnaryNode(op, state.expression())
+            state.consume(tkRparen, "Expected closing ')'")
+        else:
+            state.raiseException("Expected operator!")
+    else:
+        return state.atom()
 
-proc expression(state: ref ParserState): AstNode =
-    nil
-proc literal(state: ref ParserState): AstNode =
-    nil
-proc unary(state: ref ParserState): AstNode =
-    nil
-proc binary(state: ref ParserState): AstNode = 
-    nil
-proc grouping(state: ref ParserState): AstNode =
-    nil
+proc parse*(source: ptr char, debugLevel: int): AstNode =
+    var state = ParserState()
+    state.debugLevel = debugLevel
+    state.lex.initLexer(source)
+    try:
+        state.addr().advance()
+        result = state.addr().expression()
+        state.addr().consume(tkEof, "Expected EOF")
+    except ParseError:
+        let msg = getCurrentExceptionMsg()
+        var parts = msg.split(' ')
+        let eline = parts[1].split(',')[0].parseInt()
+        let ecol = parts[3].parseInt()
+        var sourceStream = newStringStream($source)
+        var i = 1
+        var line = ""
+        while sourceStream.readLine(line):
+            if i == eline:
+                stderr.styledWrite(line, "\n")
+            i += 1
+        stderr.styledWrite(fgRed, repeat("~", ecol-1), "^", repeat("~", 4), "\n", resetStyle)
+        stderr.styledWrite(msg, "\n")
+        state.addr().raiseException(msg)
+    except:
+        stderr.styledWrite(getCurrentExceptionMsg())
+        state.addr().raiseException(getCurrentExceptionMsg())

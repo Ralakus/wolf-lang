@@ -4,56 +4,47 @@ import
 export
     terminal
 
-proc print*(args: varargs[string, `$`]) = 
-    stdout.resetAttributes()
-    stdout.write("[ ]: ")
+template print*(args: varargs[string, `$`]) = 
+    stdout.styledWrite(resetStyle, "[ ]: ")
     for i in args:
-        stdout.write(i)
+        stdout.styledWrite(i)
 
-proc println*(args: varargs[string, `$`]) =
+template println*(args: varargs[string, `$`]) =
     print(args)
-    stdout.write("\n")
+    stdout.styledWrite("\n")
 
-proc notice*(args: varargs[string, `$`]) =
-    setForegroundColor(fgCyan)
-    stdout.write("[-]: ")
-    stdout.resetAttributes()
+template notice*(args: varargs[string, `$`]) =
+    stdout.styledWrite(resetStyle, fgCyan, "[-]: ", resetStyle)
     for i in args:
-        stdout.write(i)
+        stdout.styledWrite(i)
 
-proc noticeln*(args: varargs[string, `$`]) =
+template noticeln*(args: varargs[string, `$`]) =
     notice(args)
-    stdout.write("\n")
+    stdout.styledWrite("\n")
 
-proc success*(args: varargs[string, `$`]) = 
-    setForegroundColor(fgGreen)
-    stdout.write("[^]: ")
-    stdout.resetAttributes()
+template success*(args: varargs[string, `$`]) = 
+    stdout.styledWrite(resetStyle, fgGreen,"[^]: ", resetStyle)
     for i in args:
-        stdout.write(i)
+        stdout.styledWrite(i)
 
-proc successln*(args: varargs[string, `$`]) =
+template successln*(args: varargs[string, `$`]) =
     success(args)
-    stdout.write("\n")
+    stdout.styledWrite("\n")
 
-proc warn*(args: varargs[string, `$`]) =
-    setForegroundColor(fgYellow)
-    stdout.write("[*]: ")
-    stdout.resetAttributes()
+template warn*(args: varargs[string, `$`]) =
+    stdout.styledWrite(resetStyle, fgGreen, "[*]: ", resetStyle)
     for i in args:
-        stdout.write(i)
+        stdout.styledWrite(i)
 
-proc warnln*(args: varargs[string, `$`]) =
+template warnln*(args: varargs[string, `$`]) =
     warn(args)
-    stdout.write("\n")
+    stdout.styledWrite("\n")
 
-proc error*(args: varargs[string, `$`]) =
-    setForegroundColor(fgRed)
-    stdout.write("[!]: ")
-    stdout.resetAttributes()
+template error*(args: varargs[string, `$`]) =
+    stdout.styledWrite(resetStyle, fgRed, "[!]: ", resetStyle)
     for i in args:
-        stdout.write(i)
+        stdout.styledWrite(i)
 
-proc errorln*(args: varargs[string, `$`]) =
+template errorln*(args: varargs[string, `$`]) =
     error(args)
-    stdout.write("\n")
+    stdout.styledWrite("\n")

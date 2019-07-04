@@ -44,12 +44,15 @@ type
         tkKwSelf
         tkKwStruct
         tkKwReturn
+        tkKwImport
 
         tkKwIf
         tkKwElse
         tkKwWhile
         tkKwFor
         tkKwBreak
+        tkKwCall
+        tkKwFrom
 
         tkKwTrue
         tkKwFalse
@@ -103,12 +106,15 @@ const tokenStrMap: array[tkEof.int + 1, string] = [
     "self",
     "struct",
     "return",
+    "import",
 
     "if",
     "else",
     "while",
     "for",
     "break",
+    "call",
+    "from",
 
     "true",
     "false",

@@ -1,6 +1,6 @@
 
 import
-    lexer, util/log, strutils
+    lexer, util/log, strutils, parser, constants, os
 
 proc strSplit(x: string): seq[string] =
     if x == ":":
@@ -12,7 +12,7 @@ proc repl*(debugLevelIn: int): bool =
 
     var debugLevel = debugLevelIn
 
-    var lex = Lexer()
+    var cmdLex = Lexer()
     var onFirstTok = true
     var onCommand = false
 
@@ -22,15 +22,15 @@ proc repl*(debugLevelIn: int): bool =
         print("> ")
         let line = readLine(stdin)
 
-        lex.initLexer(line[0].unsafeAddr())
+        cmdLex.initLexer(line[0].unsafeAddr())
 
         var tok: Token
         while tok.kind != tkEof:
-            tok = lex.scanNext()
+            tok = cmdLex.scanNext()
 
             if onFirstTok and tok.kind == tkColon:
                 onCommand = true
-                tok = lex.scanNext()
+                tok = cmdLex.scanNext()
                 if tok.kind == tkIdentifier:
                     var args = strSplit($(tok.data))
                     case args[0]:
@@ -41,13 +41,25 @@ proc repl*(debugLevelIn: int): bool =
                                 debugLevel = 0
                             else:
                                 debugLevel = args[1].parseInt().clamp(0, 3)
+                        of "clear":
+                            eraseScreen()
+                            cursorUp(high(int))
+                        of "sys":
+                            if args.len < 2:
+                                errorln("Expected arguments for \'sys\' command")
+                            else:
+                                tok = cmdLex.scanNext()
+                                if execShellCmd($(tok.data)) != 0:
+                                    errorln("Failed to execute \'", $(tok.data), "\'")
                         else:
-                            errorln("Invalid command!")
-
-            if debugLevel > 1 and not onCommand:
-                noticeln($tok)
+                            errorln("Invalid command")
 
             onFirstTok = false
+
+        if not onCommand:
+            var ast = parse(line[0].unsafeAddr(), debugLevel)
+            if debugLevel >= debugAstPrintLevel:
+                echo $ast
 
         onCommand = false
 

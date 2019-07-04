@@ -1,6 +1,6 @@
 
 import
-    system, lexer, memfiles, os, util/log, argparse, repl
+    system, lexer, memfiles, os, util/log, argparse, repl, parser, constants
 
 proc main(): int =
 
@@ -46,9 +46,32 @@ proc main(): int =
 
     if args.input.len < 1:
         errorln("Expected at least one input!")
-        return 1
+        return 1 
+
+    # let debugLevel = 0
 
     let inputFile = args.input[0]
+    let inputFileSize = getFileSize(inputFile).int
+
+    if debugLevel > 0:
+        noticeln(inputFile, " size: ", $inputFileSize)
+
+
+    var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
+    defer:
+        memMap.close()
+
+    var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
+    if debugLevel >= debugAstPrintLevel:
+        echo $ast
+
+    0
+
+proc lexerSpeedTest(): int = 
+
+    const debugLevel = 0
+
+    let inputFile = paramStr(1)
     let inputFileSize = getFileSize(inputFile).int
 
     if debugLevel > 0:
@@ -72,6 +95,6 @@ proc main(): int =
             noticeln($tok)
 
     0
-
+    
 when isMainModule:
     system.quit(main())

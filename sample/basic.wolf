@@ -1,15 +1,35 @@
 
-Wolf :: struct {
+;; import expression (import <modules>...)
+(import io)
 
-    construct new :: () {}
+;; type expression (type <name> <primitives or user defined types>)
+(type Wolf (struct 
+    ;; variable expression (var <name> <type> <val>(optional))
+    (var size int)
 
-    bark :: () {
-        System.println("Bark!")
-    }
+    ;; function expression (def <name> <params> <return type> <expressions>)
+    ;; param expression (<name> <type>)
+    (def new (size int) Self ( ;; functions named new 
+        (= (self size) size)
+    ))
 
-}
+    (def bark () nil (
+        ;; if expression (if <condition> <expressions>)
+        (if (and (>= (self size) 0) (< (self size) 50)) (
+            ;; call expression (call <function name> <args>...)
+            ;; from expression (from <namespace, struct, or variable> <function name>)
+            (call (from io println) "Bark!")
+        ))
+        (elseif (>= (self size) 50) (
+            (call (from io println) "Big bark!")
+        ))
+        (else (
+            (call (from io println) "Little bark")
+        ))
+    ))
+))
 
-wolf = Wolf.new()
+(var wolf Wolf (call (from Wolf new) 48))
 
-wolf.bark()
+(call (from wolf bark))
 
