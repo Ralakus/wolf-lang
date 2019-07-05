@@ -19,11 +19,11 @@
             ;; call expression (call <function name> <args>...)
             ;; from expression (from <namespace, struct, or variable> <function name>)
             (call (from io println) "Bark!")
-        ))
-        (elseif (>= (self size) 50) (
+        )
+        elseif (>= (self size) 50) (
             (call (from io println) "Big bark!")
-        ))
-        (else (
+        )
+        else (
             (call (from io println) "Little bark")
         ))
     ))

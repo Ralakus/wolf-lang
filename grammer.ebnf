@@ -1,12 +1,12 @@
 
 (* Entry point for program *)
-program = expression, EOF;
+program = expression*, EOF;
 
+(* The last expression in a list is the returned value *)
 expression = atom
            | "(", expression*, ")"
-           | "(", unary expression, ")""
+           | "(", unary expression, ")"
            | "(", binary expression expression, ")";
 
 atom = Number
-     | String
-     | Identifier;
+     | String;

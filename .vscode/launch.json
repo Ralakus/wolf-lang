@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Debug",
             "program": "${workspaceFolder}/build/wolf",
-            "args": [],
+            "args": [ "-d=2", "-r"] ,
             "cwd": "${workspaceFolder}",
             "terminal": "integrated"
         }

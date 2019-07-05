@@ -69,6 +69,52 @@ proc main(): int =
         discard
 
     0
+
+proc lexerTest(): int = 
+    let debugLevel = 0
+
+    let inputFile = paramStr(1)
+    let inputFileSize = getFileSize(inputFile).int
+
+    if debugLevel > 0:
+        noticeln(inputFile, " size: ", $inputFileSize)
+
+
+    var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
+    defer:
+        memMap.close()
+
+    var lex = Lexer()
+    lex.initLexer(cast[ptr char](cast[ptr char](memMap.mapMem(mappedSize = inputFileSize))))
+
+    var tok: Token
+    while tok.kind != tkEof:
+        tok = lex.scanNext()
     
+    0
+    
+proc parserTest(): int = 
+    let debugLevel = 0
+
+    let inputFile = paramStr(1)
+    let inputFileSize = getFileSize(inputFile).int
+
+    if debugLevel > 0:
+        noticeln(inputFile, " size: ", $inputFileSize)
+
+
+    var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
+    defer:
+        memMap.close()
+
+    try:
+        var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
+        if debugLevel >= debugAstPrintLevel:
+            echo $ast
+    except:
+        discard
+
+    0
+
 when isMainModule:
-    system.quit(main())
+    system.quit(parserTest())

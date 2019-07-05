@@ -1,6 +1,6 @@
 
 import
-    tokenkind
+    tokenkind, strutils
 
 type
     AstNodeKind* = enum
@@ -20,7 +20,7 @@ type
                 unaryExpression*: AstNode
             of nkBinary:
                 binaryOp*: TokenKind
-                leftExpression, rightExpression*: AstNode
+                binaryLeftExpression, binaryRightExpression*: AstNode
             of nkList:
                 listExpressions*: seq[AstNode]
 
@@ -31,10 +31,10 @@ proc initStringNode*(str: string): AstNode =
     AstNode(kind: nkString, stringVal: str)
 
 proc initUnaryNode*(op: TokenKind, expression: AstNode): AstNode =
-    AstNode(kind: nkUnary, unaryExpression: expression)
+    AstNode(kind: nkUnary, unaryOp: op,  unaryExpression: expression)
 
 proc initBinaryNode*(op: TokenKind, left, right: AstNode): AstNode =
-    AstNode(kind: nkBinary, binaryOp: op, leftExpression: left, rightExpression: right)
+    AstNode(kind: nkBinary, binaryOp: op, binaryLeftExpression: left, binaryRightExpression: right)
 
 proc initListNode*(expressions: seq[AstNode]): AstNode =
     AstNode(kind: nkList, listExpressions: expressions)
@@ -46,10 +46,14 @@ proc `$`*(node: AstNode): string =
         of nkString:
             return node.stringVal
         of nkBinary:
-            return "(" & $node.binaryOp & " " & $node.leftExpression & " " & $node.rightExpression & ")"
+            return "(" & $node.binaryOp & " " & $node.binaryLeftExpression & " " & $node.binaryRightExpression & ")"
         of nkUnary:
             return "(" & $node.unaryOp & " " & $node.unaryExpression & ")"
         of nkList:
+            result.add("(")
             for i in node.listExpressions:
                 result.add($i)
+                result.add(" ")
+            result = result.strip()
+            result.add(")")
             return result

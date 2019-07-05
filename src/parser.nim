@@ -27,6 +27,12 @@ proc consume(state: ptr ParserState, kind: TokenKind, msg: string) =
     else:
         state.raiseException(msg)
 
+proc check(state: ptr ParserState, tokens: varargs[TokenKind]): bool =
+    for i in tokens:
+        if state.current.kind == i:
+            return true
+    false
+
 proc match(state: ptr ParserState, tokens: varargs[TokenKind]): bool = 
     for i in tokens:
         if state.current.kind == i:
@@ -51,23 +57,33 @@ proc expression(state: ptr ParserState): AstNode =
             tkLess, tkLessEqual):
             let op = state.previous.kind
             result = initBinaryNode(op, state.expression(), state.expression())
-            state.consume(tkRparen, "Expected closing ')'")
         elif state.match(tkBang):
             let op = state.previous.kind
             result = initUnaryNode(op, state.expression())
-            state.consume(tkRparen, "Expected closing ')'")
         else:
-            state.raiseException("Expected operator!")
-    else:
+            var list: seq[AstNode] = @[]
+            while not state.check(tkRparen):
+                if state.check(tkLparen):
+                    list.add(state.expression())
+                else:
+                    list.add(state.atom())
+            result = initListNode(list)
+        state.consume(tkRparen, "Expected closing ')'")
+    else:   
         return state.atom()
 
 proc parse*(source: ptr char, debugLevel: int): AstNode =
-    var state = ParserState()
-    state.debugLevel = debugLevel
+    var state = ParserState(debugLevel: debugLevel)
     state.lex.initLexer(source)
     try:
         state.addr().advance()
-        result = state.addr().expression()
+        var list: seq[AstNode] = @[]
+        while not state.addr().check(tkRparen, tkEof):
+            if state.addr().check(tkLparen):
+                list.add(state.addr().expression())
+            else:
+                list.add(state.addr().atom())
+        result = initListNode(list)
         state.addr().consume(tkEof, "Expected EOF")
     except ParseError:
         let msg = getCurrentExceptionMsg()
@@ -80,10 +96,11 @@ proc parse*(source: ptr char, debugLevel: int): AstNode =
         while sourceStream.readLine(line):
             if i == eline:
                 stderr.styledWrite(line, "\n")
+                stderr.styledWrite(fgRed, repeat("~", ecol-1), "^", repeat("~", line.len() - ecol), "\n", resetStyle)
+                stderr.styledWrite(msg, "\n")
+                break
             i += 1
-        stderr.styledWrite(fgRed, repeat("~", ecol-1), "^", repeat("~", 4), "\n", resetStyle)
-        stderr.styledWrite(msg, "\n")
         state.addr().raiseException(msg)
     except:
         stderr.styledWrite(getCurrentExceptionMsg())
-        state.addr().raiseException(getCurrentExceptionMsg())
+        state.addr().raiseException("Misc: " & getCurrentExceptionMsg())
