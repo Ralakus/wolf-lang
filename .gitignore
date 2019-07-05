@@ -1,4 +1,5 @@
-build/
+
 .vscode/ipch
-out.cwlf
+build
+
 test/big.wolf

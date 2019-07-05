@@ -1,7 +1,7 @@
 <img src="./logo/best_logo_ever_alpha.png" width=25%>
 
 # Wolf Programming Language
-A simple, lightweight language made in C11
+A simple, lightweight language made in Nim
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
 [![build](https://img.shields.io/travis/Ralakus/wolf-lang.svg?style=flat-square)](https://travis-ci.org/Ralakus/wolf-lang)
@@ -11,18 +11,20 @@ A simple, lightweight language made in C11
 
 
 ## Build requirements
-* Premake 5
-* A C compiler that supports the C11 standard ( i.e gcc, clang )
+* Nim compiler
+* A C compiler ( i.e gcc, clang )
 
 ## How to build ( linux )
-0. Run `premake5 gmake2 && make -C build`
+0. Run `make config=release` or `make config=debug` or just `make`
 1. Output will be under `build/bin`
 
 ## How to build ( Windows )
-0. Run `premake5 vs2017` or whatever Visual Studio version you have
-1. Open generated solution file
-2. Build solution
+0. Run `nimble build -d:debug --verbosity:2 --checks:on --opt:none --debugger:native --stackTrace:on --lineTrace:on` for debug build or `nimble build -d:release --verbosity:2 --checks:off --opt:speed --debugger:native --stackTrace:off --lineTrace:off` for a release build
+1. Output will be under `build/bin`
 
 ## What is Wolf?
 Wolf is a fast, simple programming language that aims to be user friendly and safe yet give control to the user  
 Wolf is the successor to [LabyriLanguage](https://gitlab.com/Ralakus/LabyriLanguage)
+
+## How can follow the progress?
+* Follow it on Discord! There are also some other cool projects on this Discord like FlukeWM, ModEngine, Lir Language, and more https://discord.gg/yhsWwxm
