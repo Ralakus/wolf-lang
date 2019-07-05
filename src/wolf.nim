@@ -117,4 +117,4 @@ proc parserTest(): int =
     0
 
 when isMainModule:
-    system.quit(parserTest())
+    system.quit(main())
