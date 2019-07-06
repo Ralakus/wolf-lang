@@ -1,11 +1,11 @@
 
 import
-    system, lexer, memfiles, os, util/log, argparse, repl, parser, constants
+    lexer, memfiles, os, util/log, argparse, repl, parser, constants
 
 proc main(): int =
 
-    var argParser = newParser("Wolf version 0.1.0"):
-        help("Experimental Wolf language compiler version 0.1.0")
+    var argParser = newParser("Wolf version: " & CompileDate):
+        help("Experimental Wolf language compiler version " & CompileDate)
         flag("-b", "--bytecode", help = "Input is bytecode")
         flag("-c", "--compile", help = "Compiles input to bytecode file")
         flag("-r", "--repl", help = "Overrides other flags and loads up repl environment")
@@ -48,14 +48,11 @@ proc main(): int =
         errorln("Expected at least one input!")
         return 1 
 
-    # let debugLevel = 0
-
     let inputFile = args.input[0]
     let inputFileSize = getFileSize(inputFile).int
 
     if debugLevel > 0:
         noticeln(inputFile, " size: ", $inputFileSize)
-
 
     var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
     defer:
@@ -71,14 +68,9 @@ proc main(): int =
     0
 
 proc lexerTest(): int = 
-    let debugLevel = 0
 
     let inputFile = paramStr(1)
     let inputFileSize = getFileSize(inputFile).int
-
-    if debugLevel > 0:
-        noticeln(inputFile, " size: ", $inputFileSize)
-
 
     var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
     defer:
@@ -90,31 +82,24 @@ proc lexerTest(): int =
     var tok: Token
     while tok.kind != tkEof:
         tok = lex.scanNext()
-    
+
     0
     
 proc parserTest(): int = 
-    let debugLevel = 0
 
     let inputFile = paramStr(1)
     let inputFileSize = getFileSize(inputFile).int
-
-    if debugLevel > 0:
-        noticeln(inputFile, " size: ", $inputFileSize)
-
 
     var memMap: MemFile = memfiles.open(inputFile, allowRemap = true)
     defer:
         memMap.close()
 
     try:
-        var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
-        if debugLevel >= debugAstPrintLevel:
-            echo $ast
+        var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), 0)
     except:
         discard
 
     0
 
 when isMainModule:
-    system.quit(main())
+    system.quit(lexerTest())
