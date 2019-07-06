@@ -42,6 +42,10 @@ proc match(state: ptr ParserState, tokens: varargs[TokenKind]): bool =
 
 proc strtod(str: ptr char, strEnd: ptr ptr char): float64 {.importc: "strtod", header: "<string.h>".}
 
+proc atom(state: ptr ParserState): AstNode
+proc expression(state: ptr ParserState): AstNode
+proc ifExpression(state: ptr ParserState): AstNode
+
 proc atom(state: ptr ParserState): AstNode = 
     if state.match(tkNumber):
         return initNumberNode(strtod(state.previous.data, nil))
@@ -68,6 +72,8 @@ proc expression(state: ptr ParserState): AstNode =
         elif state.match(tkBang):
             let op = state.previous.kind
             result = initUnaryNode(op, state.expression())
+        elif state.match(tkKwIf):
+            result = state.ifExpression()
         else:
             var list: seq[AstNode] = @[]
             while not state.check(tkRparen):
@@ -79,6 +85,20 @@ proc expression(state: ptr ParserState): AstNode =
         state.consume(tkRparen, "Expected closing ')'")
     else:   
         return state.atom()
+
+proc ifExpression(state: ptr ParserState): AstNode =
+    let ifCond = state.expression()
+    let ifExpr = state.expression()
+    var elseifConds: seq[AstNode] = @[]
+    var elseifExprs: seq[AstNode] = @[]
+    var elseExpr: AstNode = nil
+    while state.match(tkKwElseif):
+        elseifConds.add(state.expression())
+        elseifExprs.add(state.expression())
+    if state.match(tkKwElse):
+        elseExpr = state.expression()
+    
+    return initIfNode(ifCond, ifExpr, elseifConds, elseifExprs, elseExpr)
 
 proc parse*(source: ptr char, debugLevel: int): AstNode =
     var state = ParserState(debugLevel: debugLevel)

@@ -26,6 +26,18 @@ proc `$`*(val: TreewalkValue): string =
         of tkvBool:
             return $val.boolVal
 
+proc `==`*(l, r: TreewalkValue): bool =
+    if l.kind != r.kind:
+        return false
+    else:
+        case l.kind:
+            of tkvBool:
+                return l.boolVal == r.boolVal
+            of tkvNumber:
+                return l.numVal == r.numVal
+            of tkvString:
+                return l.strVal == r.strVal
+
 proc treewalk*(ast: AstNode): TreewalkValue =
     case ast.kind:
         of nkNumber:
@@ -51,7 +63,7 @@ proc treewalk*(ast: AstNode): TreewalkValue =
                 of tkSlash:
                     return TreewalkValue(kind: tkvNumber, numVal: treewalk(ast.binaryLeftExpression).numVal / treewalk(ast.binaryRightExpression).numVal)
                 of tkEqualEqual:
-                    return TreewalkValue(kind: tkvBool, boolVal: treewalk(ast.binaryLeftExpression).numVal == treewalk(ast.binaryRightExpression).numVal)
+                    return TreewalkValue(kind: tkvBool, boolVal: treewalk(ast.binaryLeftExpression) == treewalk(ast.binaryRightExpression))
                 of tkLess:
                     return TreewalkValue(kind: tkvBool, boolVal: treewalk(ast.binaryLeftExpression).numVal < treewalk(ast.binaryRightExpression).numVal)
                 of tkLessEqual:
@@ -66,3 +78,15 @@ proc treewalk*(ast: AstNode): TreewalkValue =
             for i in 0..ast.listExpressions.len() - 2:
                 discard treewalk(ast.listExpressions[i])
             return treewalk(ast.listExpressions[ast.listExpressions.len() - 1])
+        of nkIf:
+            if treewalk(ast.ifConditionExpresion).boolVal:
+                return treewalk(ast.ifExpression)
+            else:
+                var index = 0
+                for i in ast.ifElseifConditionExpressions:
+                    if treewalk(i).boolVal:
+                        return treewalk(ast.ifElseIfExpressions[index])
+                    index += 1
+                if ast.ifElseExpression != nil:
+                    return treewalk(ast.ifElseExpression)
+                return TreewalkValue(kind: tkvBool, boolVal: false) 

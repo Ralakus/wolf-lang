@@ -10,6 +10,7 @@ type
         nkUnary
         nkBinary
         nkList
+        nkIf
     AstNode* = ref object
         case kind*: AstNodeKind
             of nkNumber:
@@ -26,6 +27,12 @@ type
                 binaryLeftExpression*, binaryRightExpression*: AstNode
             of nkList:
                 listExpressions*: seq[AstNode]
+            of nkIf:
+                ifConditionExpresion*: AstNode
+                ifExpression*: AstNode
+                ifElseifConditionExpressions*: seq[AstNode]
+                ifElseIfExpressions*: seq[AstNode]
+                ifElseExpression*: AstNode
 
 proc initNumberNode*(num: float64): AstNode =
     AstNode(kind: nkNumber, numberVal: num)
@@ -44,6 +51,9 @@ proc initBinaryNode*(op: TokenKind, left, right: AstNode): AstNode =
 
 proc initListNode*(expressions: seq[AstNode]): AstNode =
     AstNode(kind: nkList, listExpressions: expressions)
+
+proc initIfNode*(ifCond: AstNode, ifExpr: AstNode, elseIfConds: seq[AstNode], elseifExprs: seq[AstNode], elseExpr: AstNode): AstNode = 
+    AstNode(kind: nkIf, ifConditionExpresion: ifCond, ifExpression: ifExpr, ifElseifConditionExpressions: elseIfConds, ifElseIfExpressions: elseifExprs, ifElseExpression: elseExpr)
 
 proc `$`*(node: AstNode): string =
     case node.kind:
@@ -65,3 +75,18 @@ proc `$`*(node: AstNode): string =
             result = result.strip()
             result.add(")")
             return result
+        of nkIf:
+            result.add("(")
+            result.add("if ") 
+            result.add($node.ifConditionExpresion)
+            result.add(" ")
+            result.add($node.ifExpression)
+            for i in node.ifElseIfExpressions:
+                result.add(" elseif ")
+                result.add($i)
+                result.add(" ")
+            if node.ifElseExpression != nil:
+                result.add("else ")
+                result.add($node.ifElseExpression)
+            result = result.strip()
+            result.add(")")

@@ -6,7 +6,10 @@ program = expression*, EOF;
 expression = atom
            | "(", {expression}, ")"
            | "(", unary expression, ")"
-           | "(", binary expression expression, ")";
+           | "(", binary expression expression, ")"
+           | "(", ifExpression, ")";
 
 atom = NUMBER
      | STRING;
+
+ifExpression = if" expression expression {"elseif" expression expression} {"else" expression};

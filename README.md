@@ -1,7 +1,7 @@
 <img src="./logo/best_logo_ever_alpha.png" width=25%>
 
 # Wolf Programming Language
-A simple, lightweight language made in Nim
+A simple, lightweight modern Lisp-like language made in Nim
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
 [![build](https://img.shields.io/travis/Ralakus/wolf-lang.svg?style=flat-square)](https://travis-ci.org/Ralakus/wolf-lang)
@@ -23,7 +23,7 @@ A simple, lightweight language made in Nim
 1. Output will be under `build/`
 
 ## What is Wolf?
-Wolf is a fast, simple programming language that aims to be user friendly and safe yet give control to the user  
+Wolf is a fast, simple programming language that aims to be user friendly and safe yet give control to the user while combining elegant Lisp-like syntax with features from other languages like C and Lua 
 Wolf is the successor to [LabyriLanguage](https://gitlab.com/Ralakus/LabyriLanguage)
 
 ## How can follow the progress?

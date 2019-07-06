@@ -117,7 +117,9 @@ proc identifier(lexer: var Lexer): Token {.inline.} =
             if lexer.matchKeyword("call", 1):
                 return lexer.makeToken(tkKwCall)
         of 'e':
-            if lexer.matchKeyword("else", 1):
+            if lexer.matchKeyword("elseif", 1):
+                return lexer.makeToken(tkKwElseif)
+            elif lexer.matchKeyword("else", 1):
                 return lexer.makeToken(tkKwElse)
         of 'f':
             if lexer.current - lexer.start > 1:

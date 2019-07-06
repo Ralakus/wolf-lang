@@ -1,0 +1,15 @@
+
+(if (== (if (== (+ 2 2) 5)
+    "Wot"
+elseif (== (+ 2 2) 22)
+    "Wack"
+elseif (== (+ 2 2) 4)
+    "2 + 2 == 4"
+else
+    "Something is wrong"
+) "2 + 2 == 4") 
+    "Wolf is pretty noice"
+else
+    "Wolf is broken somehow"
+)
+

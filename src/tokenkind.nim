@@ -48,6 +48,7 @@ type
 
         tkKwIf
         tkKwElse
+        tkKwElseif
         tkKwWhile
         tkKwFor
         tkKwBreak
@@ -110,6 +111,7 @@ const tokenStrMap: array[tkEof.int + 1, string] = [
 
     "if",
     "else",
+    "elseif",
     "while",
     "for",
     "break",
