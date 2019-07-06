@@ -42,9 +42,6 @@ proc match(state: ptr ParserState, tokens: varargs[TokenKind]): bool =
 
 proc strtod(str: ptr char, strEnd: ptr ptr char): float64 {.importc: "strtod", header: "<string.h>".}
 
-proc `[]`(cstr: ptr char, len: int): Slice[ptr char] = 
-    Slice[ptr char](a: cstr, b: cstr + len)
-
 proc atom(state: ptr ParserState): AstNode = 
     if state.match(tkNumber):
         return initNumberNode(strtod(state.previous.data, nil))
@@ -52,6 +49,10 @@ proc atom(state: ptr ParserState): AstNode =
         var str = newString(state.previous.len)
         copyMem(addr(str[0]), state.previous.data, state.previous.len)
         return initStringNode(str)
+    elif state.match(tkKwFalse):
+        return initBoolNode(false)
+    elif state.match(tkKwTrue):
+        return initBoolNode(true)
     else:
         state.raiseException("Expected expression")
 

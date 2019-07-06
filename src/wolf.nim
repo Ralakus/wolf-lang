@@ -1,6 +1,6 @@
 
 import
-    lexer, memfiles, os, util/log, argparse, repl, parser, constants
+    lexer, memfiles, os, util/log, argparse, repl, parser, constants, treewalk
 
 proc main(): int =
 
@@ -84,6 +84,9 @@ proc main(): int =
         var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
         if debugLevel >= debugAstPrintLevel:
             echo $ast
+        var value = treewalk(ast)
+        success()
+        stdout.styledWriteLine(fgGreen, "=> ", styleBright, $value, resetStyle)
     except:
         discard
 

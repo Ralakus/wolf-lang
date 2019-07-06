@@ -6,21 +6,24 @@ type
     AstNodeKind* = enum
         nkNumber
         nkString
+        nkBool
         nkUnary
         nkBinary
         nkList
     AstNode* = ref object
-        case kind: AstNodeKind
+        case kind*: AstNodeKind
             of nkNumber:
                 numberVal*: float64
             of nkString:
                 stringVal*: string
+            of nkBool:
+                boolVal*: bool
             of nkUnary:
                 unaryOp*: TokenKind
                 unaryExpression*: AstNode
             of nkBinary:
                 binaryOp*: TokenKind
-                binaryLeftExpression, binaryRightExpression*: AstNode
+                binaryLeftExpression*, binaryRightExpression*: AstNode
             of nkList:
                 listExpressions*: seq[AstNode]
 
@@ -29,6 +32,9 @@ proc initNumberNode*(num: float64): AstNode =
 
 proc initStringNode*(str: string): AstNode =
     AstNode(kind: nkString, stringVal: str)
+
+proc initBoolNode*(boolean: bool): AstNode =
+    AstNode(kind: nkBool, boolVal: boolean)
 
 proc initUnaryNode*(op: TokenKind, expression: AstNode): AstNode =
     AstNode(kind: nkUnary, unaryOp: op,  unaryExpression: expression)
@@ -45,6 +51,8 @@ proc `$`*(node: AstNode): string =
             return $node.numberVal
         of nkString:
             return node.stringVal
+        of nkBool:
+            return $node.boolVal
         of nkBinary:
             return "(" & $node.binaryOp & " " & $node.binaryLeftExpression & " " & $node.binaryRightExpression & ")"
         of nkUnary:

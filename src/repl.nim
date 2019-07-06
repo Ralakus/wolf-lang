@@ -1,6 +1,6 @@
 
 import
-    lexer, util/log, strutils, parser, constants, os
+    lexer, util/log, strutils, parser, constants, os, treewalk
 
 proc strSplit(x: string): seq[string] =
     if x == ":":
@@ -60,7 +60,10 @@ proc repl*(debugLevelIn: int): bool =
             try:
                 var ast = parse(line[0].unsafeAddr(), debugLevel)
                 if debugLevel >= debugAstPrintLevel:
-                    echo $ast
+                    noticeln($ast)
+                var value = treewalk(ast)
+                success()
+                stdout.styledWriteLine(fgGreen, "=> ", styleBright, $value, resetStyle)
             except:
                 discard
 
