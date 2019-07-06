@@ -1,8 +1,9 @@
 
 switch("cc", "clang")
 switch("verbosity", "2")
-switch("gc", "markAndSweep")
+switch("gc", "regions")
 switch("debugger", "native")
+switch("threads", "on")
 
 switch("nimcache", "build/cache")
 
