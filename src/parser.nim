@@ -1,6 +1,6 @@
 
 import
-    ast, lexer, util/log, strutils, constants, streams
+    ast, lexer, util/log, strutils, constants, streams, util/ptrmath
 export ast
 
 type
@@ -40,11 +40,18 @@ proc match(state: ptr ParserState, tokens: varargs[TokenKind]): bool =
             return true
     false
 
+proc strtod(str: ptr char, strEnd: ptr ptr char): float64 {.importc: "strtod", header: "<string.h>".}
+
+proc `[]`(cstr: ptr char, len: int): Slice[ptr char] = 
+    Slice[ptr char](a: cstr, b: cstr + len)
+
 proc atom(state: ptr ParserState): AstNode = 
     if state.match(tkNumber):
-        return initNumberNode(($state.previous.data)[0..<state.previous.len].parseFloat())
+        return initNumberNode(strtod(state.previous.data, nil))
     elif state.match(tkString):
-        return initStringNode(($state.previous.data)[0..<state.previous.len])
+        var str = newString(state.previous.len)
+        copyMem(addr(str[0]), state.previous.data, state.previous.len)
+        return initStringNode(str)
     else:
         state.raiseException("Expected expression")
 

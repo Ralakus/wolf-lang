@@ -15,12 +15,12 @@ A simple, lightweight language made in Nim
 * A C compiler ( i.e gcc, clang )
 
 ## How to build ( linux )
-0. Run `make config=release` or `make config=debug` or just `make`
-1. Output will be under `build/bin`
+0. Run `make config=release` or `make config=debug` or just `make` (defaults to debug build)
+1. Output will be under `build/`
 
 ## How to build ( Windows )
-0. Run `nimble build -d:debug --verbosity:2 --checks:on --opt:none --debugger:native --stackTrace:on --lineTrace:on` for debug build or `nimble build -d:release --verbosity:2 --checks:off --opt:speed --debugger:native --stackTrace:off --lineTrace:off` for a release build
-1. Output will be under `build/bin`
+0. Run `nimble build -d:debug` for debug build or `nimble build -d:release` for a release build
+1. Output will be under `build/`
 
 ## What is Wolf?
 Wolf is a fast, simple programming language that aims to be user friendly and safe yet give control to the user  

@@ -4,6 +4,13 @@ import
 
 proc main(): int =
 
+    var
+        bytecodeFlag, compileFlag, replFlag: bool = false
+        helpFlag: bool = true
+        outputOption: string = "out.cwlf"
+        debugOption: string  = "1"
+        inputArguments: seq[string] = @[]
+
     var argParser = newParser("Wolf version: " & CompileDate):
         help("Experimental Wolf language compiler version " & CompileDate)
         flag("-b", "--bytecode", help = "Input is bytecode")
@@ -13,11 +20,26 @@ proc main(): int =
         option("-d", "--debug", help = "Specifies debug level", choices = @["0", "1", "2", "3"], default = "0")
         arg("input", nargs = -1)
 
-    var args = argParser.parse(commandLineParams())
-    if args.help:
+    let helpMsg = argParser.help()
+
+    try:
+        var args = argParser.parse(commandLineParams())
+        bytecodeFlag = args.bytecode
+        compileFlag = args.compile
+        replFlag = args.repl
+        helpFlag = args.help
+        outputOption = args.output
+        debugOption = args.debug
+        inputArguments = args.input
+    except:
+        errorln(getCurrentExceptionMsg())
+        stdout.styledWrite(helpMsg)
+        return 1
+
+    if helpFlag:
         return 0
 
-    let debugLevel = case(args.debug):
+    let debugLevel = case(debugOption):
         of "0":
             0
         of "1":
@@ -31,24 +53,24 @@ proc main(): int =
 
     if paramCount() < 1:
         errorln("Expected arguments!\n")
-        echo argParser.help()
+        echo helpMsg
         return 1
 
-    if args.compile and args.bytecode:
+    if compileFlag and bytecodeFlag:
         errorln("Cannot compile bytecode to bytecode since it's already bytecode!")
         return 1
 
-    if args.repl:
+    if replFlag:
         if repl(debugLevel):
             return 0
         else:
             return 1
 
-    if args.input.len < 1:
+    if inputArguments.len < 1:
         errorln("Expected at least one input!")
         return 1 
 
-    let inputFile = args.input[0]
+    let inputFile = inputArguments[0]
     let inputFileSize = getFileSize(inputFile).int
 
     if debugLevel > 0:
@@ -102,4 +124,4 @@ proc parserTest(): int =
     0
 
 when isMainModule:
-    system.quit(lexerTest())
+    system.quit(main())
