@@ -1,6 +1,6 @@
 
 import
-    ast, lexer
+    ast, lexer, strutils
 
 type
     TreewalkValueKind* = enum
@@ -38,6 +38,18 @@ proc `==`*(l, r: TreewalkValue): bool =
             of tkvString:
                 return l.strVal == r.strVal
 
+proc `+`*(l, r: TreewalkValue): TreewalkValue = 
+    if l.kind != r.kind:
+        return TreewalkValue(kind: tkvBool, boolVal: false)
+    else:
+        case l.kind:
+            of tkvBool:
+                return TreewalkValue(kind: tkvBool, boolVal: true)
+            of tkvNumber:
+                return TreewalkValue(kind: tkvNumber, numVal: l.numVal + r.numVal)
+            of tkvString:
+                return TreewalkValue(kind: tkvString, strVal: l.strVal & r.strVal)
+
 proc treewalk*(ast: AstNode): TreewalkValue =
     case ast.kind:
         of nkNumber:
@@ -55,7 +67,7 @@ proc treewalk*(ast: AstNode): TreewalkValue =
         of nkBinary:
             case ast.binaryOp:
                 of tkPlus:
-                    return TreewalkValue(kind: tkvNumber, numVal: treewalk(ast.binaryLeftExpression).numVal + treewalk(ast.binaryRightExpression).numVal)
+                    return treewalk(ast.binaryLeftExpression) + treewalk(ast.binaryRightExpression)
                 of tkMinus:
                     return TreewalkValue(kind: tkvNumber, numVal: treewalk(ast.binaryLeftExpression).numVal - treewalk(ast.binaryRightExpression).numVal)
                 of tkStar:
