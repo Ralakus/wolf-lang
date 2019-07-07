@@ -22,5 +22,5 @@ when defined(debug):
     switch("stackTrace", "on")
     switch("lineTrace", "on")
     switch("opt", "none")
-    switch("callDepthLimit", "0")
+    switch("define", "nimCallDepthLimit=0")
 

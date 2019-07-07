@@ -81,10 +81,14 @@ proc `$`*(node: AstNode): string =
             result.add($node.ifConditionExpresion)
             result.add(" ")
             result.add($node.ifExpression)
+            var index = 0
             for i in node.ifElseIfExpressions:
                 result.add(" elseif ")
+                result.add($node.ifElseifConditionExpressions[index])
+                result.add(" ")
                 result.add($i)
                 result.add(" ")
+                index += 1
             if node.ifElseExpression != nil:
                 result.add("else ")
                 result.add($node.ifElseExpression)
