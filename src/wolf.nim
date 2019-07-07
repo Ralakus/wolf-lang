@@ -1,11 +1,11 @@
 
 import
-    lexer, memfiles, os, util/log, argparse, repl, parser, constants, treewalk
+    lexer, memfiles, os, util/log, argparse, repl, parser, constants, treewalk, msgpack4nim
 
 proc main(): int =
 
     var
-        bytecodeFlag, compileFlag, replFlag: bool = false
+        astFlag, compileFlag, replFlag: bool = false
         helpFlag: bool = true
         outputOption: string = "out.cwlf"
         debugOption: string  = "1"
@@ -13,18 +13,18 @@ proc main(): int =
 
     var argParser = newParser("Wolf version: " & CompileDate):
         help("Experimental Wolf language compiler version " & CompileDate)
-        flag("-b", "--bytecode", help = "Input is bytecode")
-        flag("-c", "--compile", help = "Compiles input to bytecode file")
+        flag("-a", "--ast", help = "Input is ast")
+        flag("-c", "--compile", help = "Compiles input to ast file")
         flag("-r", "--repl", help = "Overrides other flags and loads up repl environment")
-        option("-o", "--output", help = "Output to this file", default = "out.cwlf")
-        option("-d", "--debug", help = "Specifies debug level", choices = @["0", "1", "2", "3"], default = "0")
+        option("-o", "--output", help = "Output to this file", default = "out.wst")
+        option("-d", "--debug", help = "Specifies debug level", default = "0")
         arg("input", nargs = -1)
 
     let helpMsg = argParser.help()
 
     try:
         var args = argParser.parse(commandLineParams())
-        bytecodeFlag = args.bytecode
+        astFlag = args.ast
         compileFlag = args.compile
         replFlag = args.repl
         helpFlag = args.help
@@ -39,25 +39,15 @@ proc main(): int =
     if helpFlag:
         return 0
 
-    let debugLevel = case(debugOption):
-        of "0":
-            0
-        of "1":
-            1
-        of "2":
-            2
-        of "3":
-            3
-        else:
-            0
+    let debugLevel = debugOption.parseInt().clamp(0, 4)
 
     if paramCount() < 1:
         errorln("Expected arguments!\n")
         echo helpMsg
         return 1
 
-    if compileFlag and bytecodeFlag:
-        errorln("Cannot compile bytecode to bytecode since it's already bytecode!")
+    if compileFlag and astFlag:
+        errorln("Cannot compile bytecode to AST since it's already bytecode!")
         return 1
 
     if replFlag:
@@ -80,15 +70,28 @@ proc main(): int =
     defer:
         memMap.close()
 
+    var ast: AstNode = nil
     try:
-        var ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
+        if astFlag:
+            var msgAst = newString(inputFileSize)
+            copyMem(msgAst[0].addr(),memMap.mapMem(mappedSize = inputFileSize), inputFileSize)
+            unpack(msgAst, ast)
+        else:
+            ast = parse(cast[ptr char](memMap.mapMem(mappedSize = inputFileSize)), debugLevel)
         if debugLevel >= debugAstPrintLevel:
             echo $ast
-        var value = treewalk(ast)
-        success()
-        stdout.styledWriteLine(fgGreen, "=> ", styleBright, $value, resetStyle)
+        if not compileFlag:
+            var value = treewalk(ast)
+            success()
+            stdout.styledWriteLine(fgGreen, "=> ", styleBright, $value, resetStyle)
+        else:
+            outputOption.writeFile(pack(ast))
+    except ParseError:
+        return 2
     except:
-        discard
+        stderr.styledWrite(getCurrentExceptionMsg())
+        return 1
+        
 
     0
 

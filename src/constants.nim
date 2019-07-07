@@ -1,4 +1,5 @@
 
 const
-    debugTokenPrintLevel* = 3
+    debugTokenPrintLevel* = 4
+    debugMsgAstPrintLevel* = 3
     debugAstPrintLevel* = 2

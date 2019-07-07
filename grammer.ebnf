@@ -1,15 +1,15 @@
 
 (* Entry point for program *)
-program = expression*, EOF;
+program = {expression} EOF;
 
 (* The last expression in a list is the returned value *)
 expression = atom
-           | "(", {expression}, ")"
-           | "(", unary expression, ")"
-           | "(", binary expression expression, ")"
-           | "(", ifExpression, ")";
+           | "(" {expression} ")"
+           | "(" unary expression ")"
+           | "(" binary expression expression ")"
+           | "(" ifExpression ")" ;
 
 atom = NUMBER
-     | STRING;
+     | STRING ;
 
-ifExpression = if" expression expression {"elseif" expression expression} {"else" expression};
+ifExpression = "if" expression expression {"elseif" expression expression} {"else" expression} ;

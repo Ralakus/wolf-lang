@@ -4,6 +4,7 @@ switch("verbosity", "2")
 switch("gc", "regions")
 switch("debugger", "native")
 switch("threads", "on")
+switch("define","nimTypeNames")
 
 switch("nimcache", "build/cache")
 
