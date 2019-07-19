@@ -7,9 +7,16 @@ expression = atom
            | "(" {expression} ")"
            | "(" unary expression ")"
            | "(" binary expression expression ")"
-           | "(" ifExpression ")" ;
+           | "(" ifExpression ")"
+           | "(" letExpression ")"
+           | "(" defExpression ")" ;
 
 atom = NUMBER
-     | STRING ;
+     | STRING
+     | IDENTIFIER ;
 
-ifExpression = "if" expression expression {"elseif" expression expression} {"else" expression} ;
+ifExpression = "if" expression expression {"else" "if" expression expression} {"else" expression} ;
+
+letExpression = "let" IDENTIFIER {expression} ;
+
+defExpression = "def" IDENTIFIER {expression} ;

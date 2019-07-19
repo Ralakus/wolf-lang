@@ -1,8 +1,8 @@
 
 switch("cc", "clang")
 switch("verbosity", "2")
-switch("gc", "regions")
 switch("debugger", "native")
+switch("gc", "markAndSweep")
 switch("threads", "on")
 switch("define","nimTypeNames")
 

@@ -116,6 +116,10 @@ proc identifier(lexer: var Lexer): Token {.inline.} =
         of 'c':
             if lexer.matchKeyword("call", 1):
                 return lexer.makeToken(tkKwCall)
+        of 'd':
+            if lexer.matchKeyword("def", 1):
+                return lexer.makeToken(tkKwDef)
+
         of 'e':
             if lexer.matchKeyword("elseif", 1):
                 return lexer.makeToken(tkKwElseif)
@@ -147,6 +151,10 @@ proc identifier(lexer: var Lexer): Token {.inline.} =
                             return lexer.makeToken(tkKwImport)
                     else:
                         return lexer.makeToken(tkIdentifier)
+
+        of 'l':
+            if lexer.matchKeyword("let", 1):
+                return lexer.makeToken(tkKwLet)
 
         of 'n':
             if lexer.matchKeyword("nil", 1):

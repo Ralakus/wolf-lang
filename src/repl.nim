@@ -15,6 +15,7 @@ proc repl*(debugLevelIn: int): bool =
     var cmdLex = Lexer()
     var onFirstTok = true
     var onCommand = false
+    var env = TreewalkEnvironment()
 
     while true:
         onFirstTok = true
@@ -40,7 +41,7 @@ proc repl*(debugLevelIn: int): bool =
                             if args.len < 2:
                                 debugLevel = 0
                             else:
-                                debugLevel = args[1].parseInt().clamp(0, 3)
+                                debugLevel = args[1].parseInt().clamp(0, 4)
                         of "clear":
                             eraseScreen()
                             cursorUp(high(int))
@@ -61,11 +62,13 @@ proc repl*(debugLevelIn: int): bool =
                 var ast = parse(line[0].unsafeAddr(), debugLevel)
                 if debugLevel >= debugAstPrintLevel:
                     noticeln($ast)
-                var value = treewalk(ast)
+                var value = env.treewalk(ast)
                 success()
                 stdout.styledWriteLine(fgGreen, "=> ", styleBright, $value, resetStyle)
-            except:
+            except ParseError:
                 discard
+            except:
+                stderr.styledWriteLine(getCurrentExceptionMsg())
 
         onCommand = false
 

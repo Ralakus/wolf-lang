@@ -45,6 +45,8 @@ type
         tkKwStruct
         tkKwReturn
         tkKwImport
+        tkKwLet
+        tkKwDef
 
         tkKwIf
         tkKwElse
@@ -108,6 +110,8 @@ const tokenStrMap: array[tkEof.int + 1, string] = [
     "struct",
     "return",
     "import",
+    "let",
+    "def",
 
     "if",
     "else",

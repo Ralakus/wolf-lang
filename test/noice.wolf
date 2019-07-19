@@ -1,9 +1,9 @@
 
 (if (== (if (== (+ 2 2) 5)
     "Wot"
-elseif (== (+ 2 2) 22)
+else if (== (+ 2 2) 22)
     "Wack"
-elseif (== (+ 2 2) 4)
+else if (== (+ 2 2) 4)
     "2 + 2 == 4"
 else
     "Something is wrong"

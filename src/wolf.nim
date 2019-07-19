@@ -81,7 +81,8 @@ proc main(): int =
         if debugLevel >= debugAstPrintLevel:
             echo $ast
         if not compileFlag:
-            var value = treewalk(ast)
+            var env = TreewalkEnvironment()
+            var value = env.treewalk(ast)
             success()
             stdout.styledWriteLine(fgGreen, "=> ", styleBright, $value, resetStyle)
         else:
@@ -89,7 +90,7 @@ proc main(): int =
     except ParseError:
         return 2
     except:
-        stderr.styledWrite(getCurrentExceptionMsg())
+        stderr.styledWriteLine(getCurrentExceptionMsg())
         return 1
         
 

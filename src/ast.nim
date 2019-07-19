@@ -11,6 +11,9 @@ type
         nkBinary
         nkList
         nkIf
+        nkLet
+        nkIdentifier
+        nkDef
     AstNode* = ref object
         case kind*: AstNodeKind
             of nkNumber:
@@ -33,6 +36,15 @@ type
                 ifElseifConditionExpressions*: seq[AstNode]
                 ifElseIfExpressions*: seq[AstNode]
                 ifElseExpression*: AstNode
+            of nkLet:
+                letName*: string
+                letValue*: AstNode
+            of nkIdentifier:
+                identName*: string
+            of nkDef:
+                defName*: string
+                defParams*: seq[string]
+                defBody*: AstNode
 
 proc initNumberNode*(num: float64): AstNode =
     AstNode(kind: nkNumber, numberVal: num)
@@ -55,12 +67,21 @@ proc initListNode*(expressions: seq[AstNode]): AstNode =
 proc initIfNode*(ifCond: AstNode, ifExpr: AstNode, elseIfConds: seq[AstNode], elseifExprs: seq[AstNode], elseExpr: AstNode): AstNode = 
     AstNode(kind: nkIf, ifConditionExpresion: ifCond, ifExpression: ifExpr, ifElseifConditionExpressions: elseIfConds, ifElseIfExpressions: elseifExprs, ifElseExpression: elseExpr)
 
+proc initLetNode*(name: string, value: AstNode): AstNode =
+    AstNode(kind: nkLet, letName: name, letValue: value)
+
+proc initIdentifierNode*(name: string): AstNode =
+    AstNode(kind: nkIdentifier, identName: name)
+
+proc initDefNode*(name: string, params: seq[string], body: AstNode): AstNode =
+    AstNode(kind: nkDef, defName: name, defParams: params, defBody: body)
+
 proc `$`*(node: AstNode): string =
     case node.kind:
         of nkNumber:
             return $node.numberVal
         of nkString:
-            return node.stringVal
+            return "\"" & node.stringVal & "\""
         of nkBool:
             return $node.boolVal
         of nkBinary:
@@ -90,7 +111,25 @@ proc `$`*(node: AstNode): string =
                 result.add(" ")
                 index += 1
             if node.ifElseExpression != nil:
-                result.add("else ")
+                result.add(" else ")
                 result.add($node.ifElseExpression)
             result = result.strip()
+            result.add(")")
+        of nkLet:
+            result.add("(let ")
+            result.add(node.letName)
+            if node.letValue != nil:
+                result.add(" ")
+                result.add($node.letValue)
+            result.add(")")
+        of nkIdentifier:
+            return node.identName
+        of nkDef:
+            result.add("(def ")
+            result.add(node.defName)
+            result.add(" ")
+            for i in node.defParams:
+                result.add(i)
+                result.add(" ")
+            result.add($node.defBody)
             result.add(")")

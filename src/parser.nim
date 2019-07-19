@@ -8,7 +8,7 @@ type
         lex: Lexer
         previous, current: Token
         debugLevel: int
-    ParseError* = Exception
+    ParseError* = object of Exception
 
 proc raiseException(state: ptr ParserState, msg: string) =
     raise newException(ParseError, "line: " & $state.current.pos.line & ", col: " & $state.current.pos.col & " \n" & msg)
@@ -45,18 +45,29 @@ proc strtod(str: ptr char, strEnd: ptr ptr char): float64 {.importc: "strtod", h
 proc atom(state: ptr ParserState): AstNode
 proc expression(state: ptr ParserState): AstNode
 proc ifExpression(state: ptr ParserState): AstNode
+proc letExpression(state: ptr ParserState): AstNode
+proc defExpression(state: ptr ParserState): AstNode
 
 proc atom(state: ptr ParserState): AstNode = 
     if state.match(tkNumber):
         return initNumberNode(strtod(state.previous.data, nil))
+
     elif state.match(tkString):
         var str = newString(state.previous.len)
-        copyMem(addr(str[0]), state.previous.data, state.previous.len)
+        copyMem(addr(str[0]), state.previous.data + 1, state.previous.len - 2)
         return initStringNode(str)
+
     elif state.match(tkKwFalse):
         return initBoolNode(false)
+
     elif state.match(tkKwTrue):
         return initBoolNode(true)
+
+    elif state.match(tkIdentifier):
+        var name = newString(state.previous.len)
+        copyMem(addr(name[0]), state.previous.data, state.previous.len)
+        return initIdentifierNode(name)
+
     else:
         state.raiseException("Expected expression")
 
@@ -66,14 +77,23 @@ proc expression(state: ptr ParserState): AstNode =
             tkPlus, tkMinus, tkStar, tkSlash,
             tkEqualEqual, tkBangEqual,
             tkGreater, tkGreaterEqual,
-            tkLess, tkLessEqual):
+            tkLess, tkLessEqual, tkEqual):
             let op = state.previous.kind
             result = initBinaryNode(op, state.expression(), state.expression())
+
         elif state.match(tkBang):
             let op = state.previous.kind
             result = initUnaryNode(op, state.expression())
+
         elif state.match(tkKwIf):
             result = state.ifExpression()
+
+        elif state.match(tkKwLet):
+            result = state.letExpression()
+
+        elif state.match(tkKwDef):
+            result = state.defExpression()
+
         else:
             var list: seq[AstNode] = @[]
             while not state.check(tkRparen):
@@ -82,7 +102,9 @@ proc expression(state: ptr ParserState): AstNode =
                 else:
                     list.add(state.atom())
             result = initListNode(list)
+
         state.consume(tkRparen, "Expected closing ')'")
+
     else:   
         return state.atom()
 
@@ -92,13 +114,41 @@ proc ifExpression(state: ptr ParserState): AstNode =
     var elseifConds: seq[AstNode] = @[]
     var elseifExprs: seq[AstNode] = @[]
     var elseExpr: AstNode = nil
-    while state.match(tkKwElseif):
-        elseifConds.add(state.expression())
-        elseifExprs.add(state.expression())
-    if state.match(tkKwElse):
-        elseExpr = state.expression()
+    while state.match(tkKwElse):
+        if state.match(tkKwIf):
+            elseifConds.add(state.expression())
+            elseifExprs.add(state.expression())
+        else:
+            elseExpr = state.expression()
     
     return initIfNode(ifCond, ifExpr, elseifConds, elseifExprs, elseExpr)
+
+proc letExpression(state: ptr ParserState): AstNode = 
+    state.consume(tkIdentifier, "Expected identifier")
+    var name = newString(state.previous.len)
+    copyMem(addr(name[0]), state.previous.data, state.previous.len)
+    var value: AstNode = nil
+    if not state.check(tkRparen):
+        value = state.expression()
+    return initLetNode(name, value)
+
+proc defExpression(state: ptr ParserState): AstNode =
+    var name: string = ""
+    if state.match(tkIdentifier):
+        var name = newString(state.previous.len)
+        copyMem(addr(name[0]), state.previous.data, state.previous.len)
+
+    state.consume(tkLparen, "Expected '('")
+    var params: seq[string] = @[]
+    while state.match(tkIdentifier):
+        var param = newString(state.previous.len)
+        copyMem(addr(param[0]), state.previous.data, state.previous.len)
+        params.add(param)
+    state.consume(tkRparen, "Expected ')'")
+    
+    var body = state.expression()
+
+    return initDefNode(name, params, body)
 
 proc parse*(source: ptr char, debugLevel: int): AstNode =
     var state = ParserState(debugLevel: debugLevel)
