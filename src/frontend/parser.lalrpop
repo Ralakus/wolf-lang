@@ -1,0 +1,75 @@
+#![allow(clippy::all)]
+use crate::{
+    core::Position,
+    frontend::{
+        token::Token,
+        lexer::LexerError
+    }
+};
+use std::str::FromStr;
+
+grammar<'input>(input: &'input str);
+
+extern {
+    type Location = Position;
+    type Error = LexerError<'input>;
+    
+    enum Token<'input> {
+        "{" => Token::LCurly,
+        "}" => Token::RCurly,
+        "[" => Token::LBracket,
+        "]" => Token::RBracket,
+        "(" => Token::LParenthesis,
+        ")" => Token::RParenthesis,
+    
+        "." => Token::Dot,
+        "," => Token::Comma,
+        ":" => Token::Colon,
+        ";" => Token::SemiColon,
+        "->" => Token::Arrow,
+    
+        "+" => Token::Plus,
+        "-" => Token::Minus,
+        "*" => Token::Star,
+        "/" => Token::Slash,
+    
+        "!" => Token::Bang,
+        "!=" => Token::BangEqual,
+        "=" => Token::Equal,
+        "==" => Token::EqualEqual,
+        "<" => Token::Less,
+        "<=" => Token::LessEqual,
+        ">" => Token::Greater,
+        ">=" => Token::GreaterEqual,
+    
+        "IDENTIFIER" => Token::Identifier(<&'input str>),
+        "NUMBER" => Token::Number(<&'input str>),
+        "STRING" => Token::Str(<&'input str>),
+    
+        "class" => Token::KwClass,
+    
+        "ERROR" => Token::Error(<&'input str>),
+        "EOF" => Token::Eof,
+    }
+}
+
+pub Expression: i32 = {
+    <l:Expression> "+" <r:Factor> => l + r,
+    <l:Expression> "-" <r:Factor> => l - r,
+    Factor,
+};
+
+Factor: i32 = {
+    <l:Factor> "*" <r:Term> => l * r,
+    <l:Factor> "/" <r:Term> => l / r,
+    Term,
+};
+
+Term: i32 = {
+    Num,
+    "(" <Expression> ")",
+};
+
+Num: i32 = {
+    "NUMBER" => i32::from_str(<>).unwrap(),
+};

@@ -1,1 +1,3 @@
 /target
+src/frontend/parser.rs
+dep_graph.png
