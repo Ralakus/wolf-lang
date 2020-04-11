@@ -1,0 +1,23 @@
+add :: x y => x + y
+
+z := add(1, 2)
+
+multiply :: x y => {
+    return x * y
+}
+
+a := multiply(2, 2)
+
+a = a + z * 2
+
+Pair :: {
+    x, y
+
+    new :: x y => Pair { x = x, y = y } 
+
+    add :: self => self.x + self.y
+}
+
+something := Pair.new(14, 48)
+
+c := something.add()

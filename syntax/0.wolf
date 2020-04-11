@@ -1,0 +1,23 @@
+add :: x: I32 y: I32 -> I32 => x + y
+
+z := add(1, 2)
+
+multiply :: x: I32 y: I32 -> I32 => {
+    return x * y
+}
+
+a := multiply(2, 2)
+
+a = a + z * 2
+
+Pair :: {
+    x: I32, y: I32
+
+    new :: x: I32 y: I32 -> Pair => Pair { x = x, y = y } 
+
+    add :: self -> I32 => self.x + self.y
+}
+
+something := Pair.new(14, 48)
+
+c: I32 = something.add()
