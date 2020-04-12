@@ -1,0 +1,10 @@
+language: rust
+rust:
+  - beta
+
+before_install:
+  - rustup component add rustfmt
+
+script:
+  - cargo fmt -- --check
+  - cargo test
