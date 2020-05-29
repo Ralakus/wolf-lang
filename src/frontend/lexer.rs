@@ -69,7 +69,7 @@ impl<'a> Lexer<'a> {
     fn identifier(&mut self, start: usize) -> Token<'a> {
         let end = loop {
             match self.advance() {
-                Some((i, c)) if !c.is_alphabetic() => break i,
+                Some((i, c)) if !c.is_alphabetic() && c != '_' => break i,
                 Some(_) => continue,
                 _ => break self.source.len(),
             }
@@ -82,6 +82,15 @@ impl<'a> Lexer<'a> {
     fn match_identifier(identifier: &'a str) -> Token<'a> {
         match identifier {
             "class" => Token::KwClass,
+            "var" => Token::KwVar,
+            "true" => Token::KwTrue,
+            "false" => Token::KwFalse,
+            "if" => Token::KwIf,
+            "else" => Token::KwElse,
+            "while" => Token::KwWhile,
+            "loop" => Token::KwLoop,
+            "break" => Token::KwBreak,
+            "continue" => Token::KwContinue,
             _ => Token::Identifier(identifier),
         }
     }
