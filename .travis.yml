@@ -7,4 +7,5 @@ before_install:
   - cargo build
 
 script:
+  - cargo fmt -- --check
   - cargo test
