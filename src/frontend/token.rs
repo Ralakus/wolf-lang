@@ -33,18 +33,6 @@ pub enum Token<'a> {
     Str(&'a str),
 
     KwClass,
-    KwVar,
-    KwTrue,
-    KwFalse,
-
-    KwIf,
-    KwElse,
-
-    KwWhile,
-    KwLoop,
-
-    KwBreak,
-    KwContinue,
 
     Error(&'a str),
     Eof,

@@ -1,14 +1,5 @@
 #![allow(clippy::all)]
 use crate::{
-    ast::{
-        Block,
-        Module,
-        Statement,
-        Expression,
-        BinaryOperation,
-        UnaryOperation,
-        StatementOrDeclaration
-    },
     core::Position,
     frontend::{
         token::Token,
@@ -56,150 +47,29 @@ extern {
         "STRING" => Token::Str(<&'input str>),
     
         "class" => Token::KwClass,
-        "var" => Token::KwVar,
-        "true" => Token::KwTrue,
-        "false" => Token::KwFalse,
-
-        "if" => Token::KwIf,
-        "else" => Token::KwElse,
-
-        "while" => Token::KwWhile,
-        "loop" => Token::KwLoop,
-
-        "break" => Token::KwBreak,
-        "continue" => Token::KwContinue,
-
+    
         "ERROR" => Token::Error(<&'input str>),
         "EOF" => Token::Eof,
     }
 }
 
-pub Module: Module = {
-    <StatementOrDeclaration*> => {
-        let mut statements = Vec::new();
-        for sod in <> {
-            match sod {
-                StatementOrDeclaration::Statement(s) => statements.push(s),
-                StatementOrDeclaration::Declaration => continue,
-            }
-        }
-        Module {
-            declarations: (),
-            statements
-        }
-    }
-}
-
-StatementOrDeclaration: StatementOrDeclaration = {
-    <Statement> => StatementOrDeclaration::Statement(<>),
-}
-
-Statement: Statement = {
-    ExpressionStatement,
-    Var,
-    Break,
-    Continue,
-}
-
-ExpressionStatement: Statement = {
-    <e:Expression> ";" => Statement::Expression(e)
-}
-
-Var: Statement = {
-    "var" <n:"IDENTIFIER"> <e: ("=" <Expression>)?> ";" => Statement::Var(String::from(n), e),
-}
-
-Break: Statement = {
-    "break" <Expression?> ";" => Statement::Break(<>)
-}
-
-Continue: Statement = {
-    "continue" ";" => Statement::Continue,
-}
-
-pub Expression: Expression = {
-    <l:Expression> "==" <r:Arithmetic> => Expression::Binary(BinaryOperation::Equal, Box::new(l), Box::new(r)),
-    <l:Expression> ">" <r:Arithmetic> => Expression::Binary(BinaryOperation::Greater, Box::new(l), Box::new(r)),
-    <l:Expression> ">=" <r:Arithmetic> => Expression::Binary(BinaryOperation::GreaterEqual, Box::new(l), Box::new(r)),
-    <l:Expression> "<" <r:Arithmetic> => Expression::Binary(BinaryOperation::Lesser, Box::new(l), Box::new(r)),
-    <l:Expression> "<=" <r:Arithmetic> => Expression::Binary(BinaryOperation::LesserEqual, Box::new(l), Box::new(r)),
-    Arithmetic,
-}
-
-Arithmetic: Expression = {
-    <l:Arithmetic> "+" <r:Factor> => Expression::Binary(BinaryOperation::Add, Box::new(l), Box::new(r)),
-    <l:Arithmetic> "-" <r:Factor> => Expression::Binary(BinaryOperation::Sub, Box::new(l), Box::new(r)),
+pub Expression: i32 = {
+    <l:Expression> "+" <r:Factor> => l + r,
+    <l:Expression> "-" <r:Factor> => l - r,
     Factor,
-}
+};
 
-Factor: Expression = {
-    <l:Factor> "*" <r:Unary> => Expression::Binary(BinaryOperation::Mul, Box::new(l), Box::new(r)),
-    <l:Factor> "/" <r:Unary> => Expression::Binary(BinaryOperation::Div, Box::new(l), Box::new(r)),
-    Unary,
-}
+Factor: i32 = {
+    <l:Factor> "*" <r:Term> => l * r,
+    <l:Factor> "/" <r:Term> => l / r,
+    Term,
+};
 
-Unary: Expression = {
-    "-" <e:ControlFlow> => Expression::Unary(UnaryOperation::Negate, Box::new(e)),
-    "!" <e:ControlFlow> => Expression::Unary(UnaryOperation::Not, Box::new(e)),
-    ControlFlow,
-}
-
-ControlFlow: Expression = {
-    While,
-    Loop,
-    If,
-    Grouping,
-}
-
-Grouping: Expression = {
-    <Block> => Expression::Block(Box::new(<>)),
+Term: i32 = {
+    Num,
     "(" <Expression> ")",
-    Call,
-}
+};
 
-Call: Expression = {
-    <f:Grouping> "(" <mut args: (<Expression> ",")*> <end_arg: Expression?> ")" => {
-        if let Some(ea) = end_arg {
-            args.push(ea);
-        }
-        Expression::Call(Box::new(f), args)
-    },
-    Terminal,
-}
-
-Terminal: Expression = {
-    "NUMBER" => Expression::Number(f64::from_str(<>).unwrap()),
-    "IDENTIFIER" => Expression::Identifier(String::from(<>)),
-    "STRING" => Expression::String(String::from(<>)),
-    Boolean,
-}
-
-Boolean: Expression = {
-    "true" => Expression::Bool(true),
-    "false" => Expression::Bool(false),
-}
-
-If: Expression = {
-    "if" <cond:Expression> <body:Block> <elseifs:ElseIf*> <else_body:Else?> => Expression::If(
-        Box::new(cond), Box::new(body), Vec::from(elseifs), else_body)
-}
-
-ElseIf: (Expression, Block) = {
-    "else" "if" <cond:Expression> <body:Block> => (cond, body)
-}
-
-Else: Box<Block> = {
-    "else" <Block> => Box::new(<>)
-}
-
-While: Expression = {
-    "while" <cond:Expression> <body:Block> => Expression::While(Box::new(cond), Box::new(body)),
-}
-
-Loop: Expression = {
-    "loop" <Block> => Expression::Loop(Box::new(<>))
-}
-
-Block: Block = {
-    "{" <s:Statement*> <e:Expression?> "}" => Block { statements: Vec::from(s), end_expression: e }
-}
+Num: i32 = {
+    "NUMBER" => i32::from_str(<>).unwrap(),
+};

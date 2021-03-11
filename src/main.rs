@@ -1,7 +1,5 @@
-mod ast;
 mod core;
 mod frontend;
-mod wasm;
 
 use std::io::{BufRead, Write};
 
@@ -34,6 +32,6 @@ fn main() {
             }
         };
 
-        println!("=> {:#?}", result);
+        println!("=> {}", result);
     }
 }
