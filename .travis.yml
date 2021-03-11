@@ -4,7 +4,6 @@ rust:
 
 before_install:
   - rustup component add rustfmt
-  - cargo build
 
 script:
   - cargo fmt -- --check
