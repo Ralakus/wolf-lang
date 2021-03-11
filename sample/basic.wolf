@@ -1,0 +1,34 @@
+
+;; import expression (import <modules>...)
+(import io)
+
+;; type expression (type <name> <primitives or user defined types>)
+(type Wolf (struct 
+    ;; variable expression (var <name>: <type> <val>(optional))
+    (let size: int)
+
+    ;; function expression (def <name> <params> <return type> <expressions>)
+    ;; param expression (<name>: <type>)
+    (def new (size: int) Self ( ;; functions named new 
+        (= self.size size)
+    ))
+
+    (def bark () nil (
+        ;; if expression (if <condition> <expressions>)
+        (if (and (>= self.size 0) (< self.size 50)) (
+            ;; call expression (call <function name> <args>...)
+            (call io.println "Bark!")
+        )
+        elseif (>= self.size 50) (
+            (call io.println "Big bark!")
+        )
+        else (
+            (call io.println "Little bark")
+        ))
+    ))
+))
+
+(let wolf: Wolf (call Wolf.new 48))
+
+(call wolf.bark)
+

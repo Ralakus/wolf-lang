@@ -1,1 +1,7 @@
-/target
+
+.vscode/ipch
+build
+
+test/big.wolf
+test/bignoice.wolf
+test/milgen

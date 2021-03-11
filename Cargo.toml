@@ -1,7 +1,0 @@
-[package]
-name = "wolf"
-version = "0.1.0"
-authors = ["Mikhail Licas <mikhail@licas.dev>"]
-edition = "2018"
-
-[dependencies]
