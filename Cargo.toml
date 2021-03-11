@@ -5,7 +5,3 @@ authors = ["Mikhail Licas <mikhail@licas.dev>"]
 edition = "2018"
 
 [dependencies]
-lalrpop-util = "*"
-
-[build-dependencies]
-lalrpop = "*"

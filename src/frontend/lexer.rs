@@ -1,15 +1,12 @@
-use super::{token::Token, Position};
+use super::{
+    token::{Token, TokenData, TokenType},
+    Position,
+};
 
 pub struct Lexer<'a> {
     source: &'a str,
     chars: std::str::CharIndices<'a>,
     previous_char: Option<(usize, char)>,
-    pos: Position,
-}
-
-#[derive(Debug)]
-pub struct LexerError<'a> {
-    msg: &'a str,
     pos: Position,
 }
 
@@ -31,7 +28,7 @@ impl<'a> Lexer<'a> {
         self.previous_char
     }
 
-    pub fn get_tok(&mut self) -> (Position, Token<'a>, Position) {
+    pub fn get_tok(&mut self) -> Token<'a> {
         // skip whitespace
         loop {
             match self.previous_char {
@@ -46,27 +43,28 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        let pos = self.pos;
-
         let (i, c) = match self.previous_char {
             Some(ic) => ic,
-            _ => return (pos, Token::Eof, self.pos),
+            _ => {
+                return Token {
+                    kind: TokenType::Eof,
+                    data: TokenData::None,
+                    pos: self.pos,
+                }
+            }
         };
 
-        (
-            pos,
-            match c {
-                c if c.is_alphabetic() => self.identifier(i),
-                c if c.is_digit(10) => self.number(i),
-                '"' => self.string(i),
-                c => self.symbol(c),
-            },
-            self.pos,
-        )
+        match c {
+            c if c.is_alphabetic() => self.identifier(i),
+            c if c.is_digit(10) => self.number(i),
+            '"' => self.string(i),
+            c => self.symbol(c),
+        }
     }
 
     #[inline]
     fn identifier(&mut self, start: usize) -> Token<'a> {
+        let pos = self.pos;
         let end = loop {
             match self.advance() {
                 Some((i, c)) if !c.is_alphabetic() => break i,
@@ -75,22 +73,33 @@ impl<'a> Lexer<'a> {
             }
         };
         let identifier = &self.source[start..end];
-        Self::match_identifier(identifier)
+        Self::match_identifier(identifier, pos)
     }
 
     #[inline]
-    fn match_identifier(identifier: &'a str) -> Token<'a> {
+    fn match_identifier(identifier: &'a str, pos: Position) -> Token<'a> {
         match identifier {
-            "class" => Token::KwClass,
-            _ => Token::Identifier(identifier),
+            "class" => Token {
+                kind: TokenType::KwClass,
+                data: TokenData::None,
+                pos,
+            },
+            _ => Token {
+                kind: TokenType::Identifier,
+                data: TokenData::Str(identifier),
+                pos,
+            },
         }
     }
 
     #[inline]
     fn number(&mut self, start: usize) -> Token<'a> {
+        let mut is_float = false;
+        let start_pos = self.pos;
         let end = loop {
             match self.advance() {
                 Some((_, '.')) => {
+                    is_float = true;
                     continue;
                 }
                 Some((i, c)) if !c.is_digit(10) => break i,
@@ -98,12 +107,36 @@ impl<'a> Lexer<'a> {
                 _ => break self.source.len(),
             }
         };
-        let number = &self.source[start..end];
-        Token::Number(number)
+        let number_str = &self.source[start..end];
+        let number = if is_float {
+            let float_value = number_str.parse::<f64>();
+            match float_value {
+                Ok(f) => TokenData::Float(f),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    TokenData::Str(number_str)
+                }
+            }
+        } else {
+            let int_value = number_str.parse::<isize>();
+            match int_value {
+                Ok(n) => TokenData::Integer(n),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    TokenData::Str(number_str)
+                }
+            }
+        };
+        Token {
+            kind: TokenType::Number,
+            data: number,
+            pos: start_pos,
+        }
     }
 
     #[inline]
     fn string(&mut self, start: usize) -> Token<'a> {
+        let start_pos = self.pos;
         let end = loop {
             match self.advance() {
                 Some((i, '"')) => {
@@ -111,77 +144,177 @@ impl<'a> Lexer<'a> {
                     break i;
                 }
                 Some(_) => continue,
-                _ => return Token::Error("Unterminated string"),
+                _ => {
+                    return Token {
+                        kind: TokenType::Err,
+                        data: TokenData::Str("Unterminated string"),
+                        pos: start_pos,
+                    }
+                }
             }
         };
         let string = &self.source[start + 1..end];
-        Token::Str(string)
+        Token {
+            kind: TokenType::String,
+            data: TokenData::Str(string),
+            pos: start_pos,
+        }
     }
 
     #[inline]
     fn symbol(&mut self, previous: char) -> Token<'a> {
+        let pos = self.pos;
         let current = match self.advance() {
             Some((_, c)) => c,
             None => '\0',
         };
         match (previous, current) {
-            ('{', _) => Token::LCurly,
-            ('}', _) => Token::RCurly,
-            ('[', _) => Token::LBracket,
-            (']', _) => Token::RBracket,
-            ('(', _) => Token::LParenthesis,
-            (')', _) => Token::RParenthesis,
-            ('.', _) => Token::Dot,
-            (',', _) => Token::Comma,
-            (':', _) => Token::Colon,
-            (';', _) => Token::SemiColon,
-            ('+', _) => Token::Plus,
+            ('{', _) => Token {
+                kind: TokenType::LCurly,
+                data: TokenData::None,
+                pos,
+            },
+            ('}', _) => Token {
+                kind: TokenType::RCurly,
+                data: TokenData::None,
+                pos,
+            },
+            ('[', _) => Token {
+                kind: TokenType::LBracket,
+                data: TokenData::None,
+                pos,
+            },
+            (']', _) => Token {
+                kind: TokenType::RBracket,
+                data: TokenData::None,
+                pos,
+            },
+            ('(', _) => Token {
+                kind: TokenType::LParenthesis,
+                data: TokenData::None,
+                pos,
+            },
+            (')', _) => Token {
+                kind: TokenType::RParenthesis,
+                data: TokenData::None,
+                pos,
+            },
+            ('.', _) => Token {
+                kind: TokenType::Dot,
+                data: TokenData::None,
+                pos,
+            },
+            (',', _) => Token {
+                kind: TokenType::Comma,
+                data: TokenData::None,
+                pos,
+            },
+            (':', _) => Token {
+                kind: TokenType::Colon,
+                data: TokenData::None,
+                pos,
+            },
+            (';', _) => Token {
+                kind: TokenType::SemiColon,
+                data: TokenData::None,
+                pos,
+            },
+            ('+', _) => Token {
+                kind: TokenType::Plus,
+                data: TokenData::None,
+                pos,
+            },
             ('-', '>') => {
                 self.advance();
-                Token::Arrow
+                Token {
+                    kind: TokenType::Arrow,
+                    data: TokenData::None,
+                    pos,
+                }
             }
-            ('-', _) => Token::Minus,
-            ('*', _) => Token::Star,
-            ('/', _) => Token::Slash,
+            ('-', _) => Token {
+                kind: TokenType::Minus,
+                data: TokenData::None,
+                pos,
+            },
+            ('*', _) => Token {
+                kind: TokenType::Star,
+                data: TokenData::None,
+                pos,
+            },
+            ('/', _) => Token {
+                kind: TokenType::Slash,
+                data: TokenData::None,
+                pos,
+            },
             ('!', '=') => {
                 self.advance();
-                Token::BangEqual
+                Token {
+                    kind: TokenType::BangEqual,
+                    data: TokenData::None,
+                    pos,
+                }
             }
-            ('!', _) => Token::Bang,
+            ('!', _) => Token {
+                kind: TokenType::Bang,
+                data: TokenData::None,
+                pos,
+            },
             ('=', '=') => {
                 self.advance();
-                Token::EqualEqual
+                Token {
+                    kind: TokenType::EqualEqual,
+                    data: TokenData::None,
+                    pos,
+                }
             }
-            ('=', _) => Token::Equal,
+            ('=', _) => Token {
+                kind: TokenType::Equal,
+                data: TokenData::None,
+                pos,
+            },
             ('<', '=') => {
                 self.advance();
-                Token::LessEqual
+                Token {
+                    kind: TokenType::LessEqual,
+                    data: TokenData::None,
+                    pos,
+                }
             }
-            ('<', _) => Token::Less,
+            ('<', _) => Token {
+                kind: TokenType::Less,
+                data: TokenData::None,
+                pos,
+            },
             ('>', '=') => {
                 self.advance();
-                Token::GreaterEqual
+                Token {
+                    kind: TokenType::GreaterEqual,
+                    data: TokenData::None,
+                    pos,
+                }
             }
-            ('>', _) => Token::Greater,
-            _ => Token::Error("Invalid character"),
+            ('>', _) => Token {
+                kind: TokenType::Greater,
+                data: TokenData::None,
+                pos,
+            },
+            _ => Token {
+                kind: TokenType::Err,
+                data: TokenData::Str("Invalid character"),
+                pos,
+            },
         }
     }
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Result<(Position, Token<'a>, Position), LexerError<'a>>;
+    type Item = Token<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.get_tok() {
-            (pos, Token::Error(msg), _) => Some(Err(LexerError { msg, pos })),
-            (_, t, _) if t == Token::Eof => None,
-            ptp => Some(Ok(ptp)),
+            t if t.kind == TokenType::Eof => None,
+            t => Some(t),
         }
-    }
-}
-
-impl<'a> std::fmt::Display for LexerError<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} at [{}:{}]", self.msg, self.pos.line, self.pos.col)
     }
 }
